@@ -15,6 +15,7 @@ class UserCreate(UserBase):
 # Schema para Resposta (o que sai do banco para o template/API)
 class UserResponse(UserBase):
     id: int
+    is_active: bool
     employee: EmployeeResponse
 
     class Config:
