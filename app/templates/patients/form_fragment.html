@@ -1,0 +1,126 @@
+<div class="bg-white p-6 rounded-lg shadow-md">
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold text-gray-800">
+            {{ "Editar Paciente" if patient else "Cadastrar Novo Paciente" }}
+        </h2>
+        <button
+            hx-get="/patients"
+            hx-target="#main-content"
+            hx-push-url="true"
+            class="text-gray-500 hover:text-gray-700"
+        >
+            &larr; Voltar para a lista
+        </button>
+    </div>
+
+    {% if erro %}
+    <div class="bg-red-100 text-red-700 p-3 rounded mb-4">{{ erro }}</div>
+    {% endif %}
+
+    <form
+        hx-post="{{ '/patients/edit/' + (patient.id|string) if patient and patient.id else '/patients/save' }}"
+        hx-target="#main-content"
+        class="space-y-4"
+    >
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700"
+                    >Nome Completo</label
+                >
+                <input
+                    type="text"
+                    name="name"
+                    value="{{ patient.name if patient else '' }}"
+                    required
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
+                />
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700"
+                    >CPF</label
+                >
+                <input
+                    type="text"
+                    name="cpf"
+                    id="input-cpf"
+                    placeholder="000.000.000-00"
+                    value="{{ patient.cpf if patient else '' }}"
+                    required
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
+                />
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700"
+                    >Data de Nascimento</label
+                >
+                <input
+                    type="date"
+                    name="birth_date"
+                    value="{{ patient.birth_date if patient else '' }}"
+                    required
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
+                />
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700"
+                    >Contacto (Telemóvel/WhatsApp)</label
+                >
+                <input
+                    type="text"
+                    name="contact"
+                    id="input-contact"
+                    placeholder="(00) 0 0000-0000"
+                    value="{{ patient.contact if patient else '' }}"
+                    required
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
+                />
+            </div>
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700"
+                >Endereço Completo</label
+            >
+            <input
+                type="text"
+                name="address"
+                value="{{ patient.address if patient else '' }}"
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
+            />
+        </div>
+
+        <div class="flex justify-end space-x-2 pt-4">
+            <button
+                type="button"
+                hx-get="/patients"
+                hx-push-url="true"
+                hx-target="#main-content"
+                class="bg-gray-500 text-white px-4 py-2 rounded"
+            >
+                Cancelar
+            </button>
+            <button
+                type="submit"
+                class="bg-blue-600 text-white px-6 py-2 rounded"
+            >
+                {{ "Atualizar" if patient and patient.id else "Salvar" }}
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+    (function () {
+        if (typeof IMask !== "undefined") {
+            const inputCpf = document.getElementById("input-cpf");
+            const inputContact = document.getElementById("input-contact");
+            const maskCpf = {
+                mask: "000.000.000-00",
+            };
+            const maskContact = {
+                mask: "(00) 0 0000-0000",
+            };
+            IMask(inputCpf, maskCpf);
+            IMask(inputContact, maskContact);
+        }
+    })();
+</script>

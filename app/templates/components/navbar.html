@@ -1,0 +1,62 @@
+<nav class="bg-blue-600 text-white shadow-lg">
+    <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+        <button
+            hx-get="/"
+            hx-target="#main-content"
+            hx-push-url="true"
+            class="text-xl font-bold"
+        >
+            ClinicManager
+        </button>
+        {% if request.state.user %}
+            {%if request.state.user.employee.role == "admin" %}
+            <div class="flex space-x-2">
+                <button
+                    hx-get="/patients"
+                    hx-target="#main-content"
+                    hx-push-url="true"
+                    class="px-3 py-2 rounded hover:bg-blue-700 transition"
+                >
+                    Pacientes
+                </button>
+
+                <button
+                    hx-get="/employees"
+                    hx-target="#main-content"
+                    hx-push-url="true"
+                    class="px-3 py-2 rounded hover:bg-blue-700 transition"
+                >
+                    Funcionários
+                </button>
+                <button
+                    hx-get="/users"
+                    hx-target="#main-content"
+                    hx-push-url="true"
+                    class="px-3 py-2 rounded hover:bg-blue-700 transition"
+                >
+                    Usuários
+                </button>
+
+                <button
+                    hx-get="/appointments/list"
+                    hx-target="#main-content"
+                    hx-push-url="true"
+                    class="px-3 py-2 rounded hover:bg-blue-700 transition"
+                >
+                    Agenda
+                </button>
+            {% endif %}
+                <div class="user-info">
+                    <span>Olá, {{ request.state.user.username }}</span>
+                    <span class="badge">{{ request.state.user.role }}</span>
+                    <button
+                        hx-get="/auth/logout"
+                        class="px-3 py-2 rounded hover:bg-red-600 transition"
+                    >
+                        Sair
+                    </button>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</nav>

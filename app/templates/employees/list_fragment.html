@@ -1,0 +1,113 @@
+<div class="bg-white shadow-md rounded-lg p-6">
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold text-gray-800">
+            Corpo Clínico e Administrativo
+        </h2>
+        <button
+            hx-get="/employees/new"
+            hx-target="#main-content"
+            hx-push-url="true"
+            class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+        >
+            + Novo Funcionário
+        </button>
+    </div>
+
+    <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+            <tr>
+                <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"
+                >
+                    Nome / CPF
+                </th>
+                <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"
+                >
+                    Cargo
+                </th>
+                <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"
+                >
+                    Espec./Depto
+                </th>
+                <th
+                    class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase"
+                >
+                    Ações
+                </th>
+            </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+            {% for emp in employees %}
+            <tr id="emp-{{ emp.id }}">
+                <td class="px-6 py-4">
+                    <div class="text-sm font-medium text-gray-900">
+                        {{ emp.name }}
+                    </div>
+                    <div class="text-sm text-gray-500">{{ emp.cpf }}</div>
+                </td>
+                <td class="px-6 py-4 text-sm text-gray-500 capitalize">
+                    {{ emp.role }}
+                </td>
+                <td class="px-6 py-4 text-sm text-gray-500">
+                    {{ emp.specialty_data.name if emp.specialty_data else
+                    emp.department or '-' }}
+                </td>
+                <td class="px-6 py-4 text-right space-x-2 text-sm">
+                    <button
+                        hx-get="/employees/edit/{{ emp.id }}"
+                        hx-target="#main-content"
+                        hx-push-url="true"
+                        class="text-blue-600 hover:text-blue-900"
+                    >
+                        Editar
+                    </button>
+                    <button
+                        hx-delete="/employees/delete/{{ emp.id }}"
+                        hx-target="#emp-{{ emp.id }}"
+                        hx-swap="outerHTML"
+                        hx-confirm="Deseja excluir este funcionário?"
+                        class="text-red-600 hover:text-red-900"
+                    >
+                        Excluir
+                    </button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <div class="flex items-center justify-between mt-6 border-t pt-4">
+        <div class="text-sm text-gray-700">
+            Página <span class="font-semibold">{{ current_page }}</span> de <span class="font-semibold">{{ total_pages }}</span>
+        </div>
+        
+        <div class="flex space-x-2">
+            {% if has_prev %}
+            <button hx-get="/employees?page={{ current_page - 1 }}"
+                    hx-target="#main-content"
+                    hx-push-url="true"
+                    class="px-4 py-2 border rounded text-sm font-medium hover:bg-gray-50 transition">
+                Anterior
+            </button>
+            {% else %}
+            <button disabled class="px-4 py-2 border rounded text-sm font-medium text-gray-300 cursor-not-allowed">
+                Anterior
+            </button>
+            {% endif %}
+
+            {% if has_next %}
+            <button hx-get="/employees?page={{ current_page + 1 }}"
+                    hx-target="#main-content"
+                    hx-push-url="true"
+                    class="px-4 py-2 border rounded text-sm font-medium hover:bg-gray-50 transition">
+                Próximo
+            </button>
+            {% else %}
+            <button disabled class="px-4 py-2 border rounded text-sm font-medium text-gray-300 cursor-not-allowed">
+                Próximo
+            </button>
+            {% endif %}
+        </div>
+    </div>
+</div>

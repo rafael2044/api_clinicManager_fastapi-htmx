@@ -1,0 +1,41 @@
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="bg-white p-6 rounded-lg shadow-md border-t-4 border-blue-500">
+        <h2 class="text-xl font-semibold mb-4">Ações Rápidas</h2>
+        <div class="flex flex-col space-y-2">
+            <button
+                hx-get="/patients/form"
+                hx-target="#main-content"
+                class="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600"
+            >
+                Cadastrar Novo Paciente
+            </button>
+            <button
+                hx-get="/agenda/novo"
+                hx-target="#main-content"
+                class="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600"
+            >
+                Agendar Consulta
+            </button>
+        </div>
+    </div>
+
+    <div class="bg-white p-6 rounded-lg shadow-md md:col-span-2">
+        <h2 class="text-xl font-semibold mb-4 text-gray-700">Agenda de Hoje</h2>
+
+        <div hx-get="/agenda/hoje" hx-trigger="load">
+            <p class="text-gray-500 italic">Buscando agendamentos...</p>
+        </div>
+    </div>
+</div>
+
+<div class="mt-8 bg-blue-50 border-l-4 border-blue-400 p-4">
+    <div class="flex">
+        <div class="ml-3">
+            <p class="text-sm text-blue-700">
+                Bem-vindo ao ClinicManager. Você tem
+                <span class="font-bold">5 consultas</span> confirmadas para o
+                período da tarde.
+            </p>
+        </div>
+    </div>
+</div>

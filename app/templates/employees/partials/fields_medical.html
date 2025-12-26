@@ -1,0 +1,37 @@
+<div class="bg-blue-50 p-4 rounded-lg border border-blue-100 grid grid-cols-1 md:grid-cols-2 gap-6 animate-fade-in">
+    <input type="hidden" name="role" value="doctor">
+    <div>
+        <label class="block text-sm font-medium text-blue-800 mb-1">CRM (com UF)</label>
+        <input type="text" name="crm" id="input-crm" required value="{{ employee.crm if employee else '' }}"
+               class="w-full rounded-md border-blue-200 border p-2 focus:ring-2 focus:ring-blue-500 outline-none bg-white">
+    </div>
+    <div>
+        <label class="block text-sm font-medium text-blue-800 mb-1">Especialidade</label>
+        <div class="flex gap-2">
+            <select name="specialty_id" required class="flex-1 rounded-md border-blue-200 border p-2 bg-white">
+                <option value="">Selecione...</option>
+                {% for spec in specialties %}
+                <option value="{{ spec.id }}" {{ 'selected' if employee and employee.specialty_id == spec.id }}>
+                    {{ spec.name }}
+                </option>
+                {% endfor %}
+            </select>
+            <button type="button" hx-get="/specialties/manage" hx-target="#main-content" hx-push-url="true"
+                    class="bg-white hover:bg-blue-100 text-blue-600 p-2 rounded-md border border-blue-200">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37a1.724 1.724 0 002.572-1.065z"></path></svg>
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function () {
+        if (typeof IMask !== "undefined") {
+            const inputCrm = document.getElementById("input-crm");
+            const maskCrm = {
+                mask: "0000000",
+            };
+            IMask(inputCrm, maskCrm);
+        }
+    })();
+</script>

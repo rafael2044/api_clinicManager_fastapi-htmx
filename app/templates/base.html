@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="pt-br">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>ClinicManager - Sistema Médico</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script src="https://unpkg.com/imask"></script>
+        <script
+            src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.8/dist/htmx.min.js"
+            integrity="sha384-/TgkGk7p307TH7EXJDuUlgG3Ce1UVolAOFopFekQkkXihi5u/6OCvVKyz1W+idaz"
+            crossorigin="anonymous"
+        ></script>
+    </head>
+    <body class="bg-gray-50 text-gray-900">
+        {% include "components/navbar.html" %}
+
+        <main class="container mx-auto px-4 py-8">
+            <div id="main-content">{% block content %}{% endblock %}</div>
+        </main>
+
+        <div
+            class="htmx-indicator fixed bottom-4 right-4 bg-yellow-400 p-2 rounded shadow"
+            id="loader"
+        >
+            Carregando...
+        </div>
+
+        <script>
+            function updateActiveNav() {
+                const currentPath = window.location.pathname;
+                console.log(currentPath);
+
+                document
+                    .querySelectorAll("nav button[hx-get]")
+                    .forEach((btn) => {
+                        const btnPath = btn.getAttribute("hx-get");
+                        console.log(btnPath.split("/"));
+                        // Verifica se a URL atual começa com o caminho do botão
+                        // Ex: se a URL é /patients/edit/1, o botão de /patients/list deve brilhar
+                        if (
+                            btnPath.length > 1 &&
+                            currentPath.startsWith(btnPath.split("/")[1], 1)
+                        ) {
+                            btn.classList.add(
+                                "bg-blue-800",
+                                "ring-2",
+                                "ring-white",
+                            );
+                        } else {
+                            btn.classList.remove(
+                                "bg-blue-800",
+                                "ring-2",
+                                "ring-white",
+                            );
+                        }
+                    });
+            }
+
+            // Executa sempre que o HTMX terminar de trocar o conteúdo e atualizar a URL
+            document.body.addEventListener("htmx:afterOnLoad", updateActiveNav);
+
+            // Executa ao carregar a página pela primeira vez (F5)
+            window.addEventListener("load", updateActiveNav);
+        </script>
+
+        <style>
+            .htmx-indicator {
+                display: none;
+            }
+            .htmx-request .htmx-indicator {
+                display: block;
+            }
+            .htmx-request.htmx-indicator {
+                display: block;
+            }
+        </style>
+    </body>
+</html>
