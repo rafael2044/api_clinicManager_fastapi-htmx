@@ -3,15 +3,15 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, Form, Request, Response
 from fastapi.responses import HTMLResponse
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.deps import get_db, templates
 from app.models import Employee, Specialty
+from app.schemas import EmployeeCreate, EmployeeResponse, SpecialtyResponse
 
 router = APIRouter(prefix="/employees", tags=["Employees"])
 
 
-# --- LISTAR TODOS (GET) ---
 @router.get("", response_class=HTMLResponse)
 async def list_employees(
     request: Request,
@@ -23,17 +23,18 @@ async def list_employees(
 ):
     offset = (page - 1) * size
     total_count = db.query(Employee).count()
-    employees = db.query(Employee).offset(offset).limit(size).all()
+    employees = db.query(Employee).options(joinedload(Employee.specialty_data)).offset(offset).limit(size).all()
     total_pages = (total_count + size - 1) // size
     template = (
         "employees/list_fragment.html"
         if request.headers.get("HX-Request")
         else "employees/list_full.html"
     )
+    result = [EmployeeResponse.model_validate(p) for p in employees]
     return templates.TemplateResponse(
         template, {
             "request": request,
-            "employees": employees,
+            "employees": result,
             "current_page": page,
             "total_pages": total_pages,
             "has_next": page < total_pages,
@@ -44,16 +45,16 @@ async def list_employees(
     )
 
 
-# 2. FORMULÁRIO (NOVO/EDITAR)
 @router.get("/new", response_class=HTMLResponse)
 async def form_employee(request: Request, db: Session = Depends(get_db)):
     is_htmx = request.headers.get("HX-request")
     specialties = db.query(Specialty).all()
+    result_specialties = [SpecialtyResponse.model_validate(s) for s in specialties]
     template_name = (
         "employees/form_fragment.html" if request.headers.get("HX-request")
         else "employees/form_full.html")
     return templates.TemplateResponse(
-       template_name, {"request": request, "employee": None, "specialties": specialties}
+       template_name, {"request": request, "specialties": result_specialties}
     )
 
 
@@ -71,7 +72,7 @@ async def edit_employee(emp_id: int, request: Request, db: Session = Depends(get
             {
                 "request": request,
                 "message": f"Não existe nenhum funcionário com o ID {emp_id}.",
-                "return_point": "/employees/",
+                "return_point": "/employees",
                 "return_page": "a Lista de Funcionários",
             },
         )
@@ -79,13 +80,14 @@ async def edit_employee(emp_id: int, request: Request, db: Session = Depends(get
     specialties = (
         db.query(Specialty).all() if employee.role == "doctor" else []
     )
+    result_specialties = [SpecialtyResponse.model_validate(s) for s in specialties] if specialties else []
     template_name = (
         "employees/form_fragment.html" if request.headers.get("HX-request")
         else "employees/form_full.html"
     )
     return templates.TemplateResponse(
         template_name,
-        {"request": request, "employee": employee, "specialties": specialties},
+        {"request": request, "employee": employee, "specialties": result_specialties},
     )
 
 
@@ -94,9 +96,11 @@ async def edit_employee(emp_id: int, request: Request, db: Session = Depends(get
 async def render_fields(request: Request, role: str, db: Session = Depends(get_db)):
     if role == "doctor":
         specialties = db.query(Specialty).all()
+        result_specialties = [SpecialtyResponse.model_validate(s) for s in specialties]
+
         return templates.TemplateResponse(
             "employees/partials/fields_medical.html",
-            {"request": request, "specialties": specialties},
+            {"request": request, "specialties": result_specialties},
         )
     else:
         return templates.TemplateResponse(
@@ -119,17 +123,25 @@ async def save_employee(
     department: Optional[str] = Form(None),
     db: Session = Depends(get_db),
 ):
-    date_obj = datetime.strptime(birth_date, "%Y-%m-%d").date()
+    employee_request = EmployeeCreate(
+        name=name,
+        cpf=cpf,
+        birth_date=datetime.strptime(birth_date, "%Y-%m-%d").date(),
+        role=role,
+        crm=crm,
+        specialty_id=specialty_id,
+        department=department
+    )
 
     if not employee_id:
-        new_emp = Employee(
-            name=name,
-            cpf=cpf,
-            birth_date=date_obj,
-            role=role,
-            crm=crm if role in ["doctor", "nutritionist"] else None,
-            specialty_id=specialty_id if role in ["doctor", "nutritionist"] else None,
-            department=department if role in ["receptionist", "admin"] else None,
+        new_employee = Employee(
+            name=employee_request.name,
+            cpf=employee_request.cpf,
+            birth_date=employee_request.birth_date,
+            role=employee_request.role,
+            crm=crm if employee_request.role in ["doctor", "nutritionist"] else None,
+            specialty_id=specialty_id if employee_request.role in ["doctor", "nutritionist"] else None,
+            department=department if employee_request.role in ["receptionist", "admin"] else None,
         )
         
         exists_cpf = db.query(Employee).filter(Employee.cpf == cpf).first()
@@ -137,13 +149,13 @@ async def save_employee(
             return templates.TemplateResponse(
                 "employees/form_fragment.html", {
                     "request": request,
-                    "employee": new_emp,
+                    "employee": employee_request,
                     "erro": f"CPF já está em uso."
                 }
             )
 
         try:
-            db.add(new_emp)
+            db.add(new_employee)
             db.commit()
             return await list_employees(request, db, success="Funcionário cadastrado com sucesso.")  # Retorna a lista atualizada
         except Exception as e:
@@ -152,7 +164,7 @@ async def save_employee(
                 "employees/form_fragment.html",
                 {
                     "request": request,
-                    "employee": new_emp,
+                    "employee": employee_request,
                     "erro": "Erro interno ao tentar gravar dados.",
                 },
             )
@@ -161,15 +173,27 @@ async def save_employee(
         if db_employee:
             exists_cpf = db.query(Employee).filter(Employee.cpf == cpf).first()
             if (cpf != db_employee.cpf and not exists_cpf) or (cpf == db_employee.cpf and exists_cpf):
-                db_employee.name = name
-                db_employee.cpf = cpf
-                db_employee.birth_date=date_obj
-                db_employee.role = role
-                db_employee.crm = crm if role == "doctor" else None
-                db_employee.specialty_id = specialty_id if role == "doctor" else None
-                db_employee.department = department if role != "doctor" else None
+                db_employee.name = employee_request.name
+                db_employee.cpf = employee_request.cpf
+                db_employee.birth_date=employee_request.birth_date
+                db_employee.role = employee_request.role
+                db_employee.crm = crm if employee_request.role == "doctor" else None
+                db_employee.specialty_id = specialty_id if employee_request.role == "doctor" else None
+                db_employee.department = department if employee_request.role != "doctor" else None
                 db.commit()
                 return await list_employees(request, db, success="Funcionário atualizado com sucesso.")
+            template_name = (
+                "employees/form_fragment.html" if request.headers.get("HX-request") else
+                "employees/form_full.html"
+            )
+            return templates.TemplateResponse(
+                template_name,
+                {
+                    "request": request,
+                    "error": "CPF em uso.",
+                    "employee": EmployeeResponse(id=employee_id, **employee_request.model_dump())
+                }
+            )
     except Exception as e:
         db.rollback()
         template_name = (
@@ -180,7 +204,7 @@ async def save_employee(
                 template_name,
                 {
                     "request": request,
-                    "erro": "Erro ao salvar: CPF já cadastrado ou dados inválidos.",
+                    "message": f"Erro ao salvar: {e} ",
                 },
             )
                     

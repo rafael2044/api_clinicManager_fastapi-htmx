@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.deps import templates
 from app.models import Patient
-from app.schemas.patient_schemas import PatientResponse, PatientCreate
+from app.schemas import PatientResponse, PatientCreate
 
 from app.deps import get_db, RoleChecker
 
@@ -170,7 +170,7 @@ async def edit_patient(
                     "patients/form_fragment.html",
                     {
                         "request": request,
-                        "patient": patient_update,  # Para não perder o que o usuário digitou
+                        "patient": PatientResponse(id=patient_id, **patient_update.model_dump()),  # Para não perder o que o usuário digitou
                         "erro": "CPF utilizado por outro paciente",
                     },
                 )
