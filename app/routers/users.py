@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Request, Depends, Form, HTTPException
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, Response
 from sqlalchemy.orm import Session
 
 
@@ -16,13 +16,16 @@ allow_patient_manage = RoleChecker(["admin"])
 
 @router.get("", response_class=HTMLResponse, dependencies=[Depends(allow_patient_manage)])
 async def list_users(request: Request, db: Session = Depends(get_db)):
-
+    template_name = (
+        "users/list_fragment.html" if request.headers.get("HX-request")
+        else "users/list_full.html"
+    )
     users = db.query(User).all()
     result_users = [UserResponse.model_validate(u) for u in users ]
     
     available_employees = db.query(Employee).filter(~Employee.user_account.has()).all()
     result_available_employees = [EmployeeResponse.model_validate(e) for e in available_employees]
-    return templates.TemplateResponse("users/list_fragment.html", {
+    return templates.TemplateResponse(template_name, {
         "request": request,
         "users": result_users,
         "employees": result_available_employees
@@ -71,3 +74,22 @@ async def toggle_user_status(request: Request, user_id: int, db: Session = Depen
             "bg_color": bg_color,
             "status_text": status_text
         })
+
+     
+@router.get("/change-password-form/{user_id}")
+async def change_password_form(user_id: int, request: Request, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.id == user_id).first()
+    return templates.TemplateResponse("users/partials/modal_password.html", {
+        "request": request,
+        "user": user
+    })
+
+@router.post("/update-password/{user_id}")
+async def update_password(user_id: int, password: str = Form(...), db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.id == user_id).first()
+    if user:
+        user.hashed_password = get_password_hash(password)
+        db.commit()
+    
+    # Retornamos um cabeçalho para o HTMX fechar o modal ou apenas uma mensagem vazia
+    return Response(headers={"HX-Trigger": "closeModal"})

@@ -45,6 +45,14 @@
                         {% include "users/partials/status_badge.html" %}
                     </td>
                     <td class="p-3 text-right">
+                        <button hx-get="/users/change-password-form/{{ user.id }}" 
+                                hx-target="#modal-slot"
+                                class="p-1 text-gray-500 hover:text-blue-600 border rounded hover:border-blue-600 transition"
+                                title="Alterar Senha">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                            </svg>
+                        </button>
                         <button hx-post="/users/toggle-status/{{ user.id }}" 
                                 hx-target="#status-user-{{ user.id }}"
                                 class="text-xs font-medium px-3 py-1 rounded border border-gray-300 hover:bg-gray-100">
@@ -55,5 +63,15 @@
                 {% endfor %}
             </tbody>
         </table>
+        <div id="modal-slot"></div>
     </div>
 </div>
+
+<script>
+    // Escuta o evento enviado pelo servidor para fechar o modal após sucesso
+    document.body.addEventListener('closeModal', function() {
+        const modal = document.getElementById('modal-container');
+        if (modal) modal.remove();
+        alert('Senha atualizada com sucesso!');
+    });
+</script>
