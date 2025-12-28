@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.deps import templates
 from app.models import Patient
-from app.schemas.patient_schemas import PatientResponse, PatientCreate
+from app.schemas import PatientResponse, PatientCreate
 
 from app.deps import get_db, RoleChecker
 
@@ -16,51 +16,41 @@ allow_patient_manage = RoleChecker(["admin", "receptionist"])
 
 @router.get("", response_class=HTMLResponse, dependencies=[Depends(allow_patient_manage)])
 async def list_complete_patients(request: Request, db: Session = Depends(get_db)):
+    templote_name = ("patients/list_fragment.html" if request.headers.get("HX-request")
+                     else "patients/list_full.html")
+    
     patients = db.query(Patient).all()
     result = [
-        PatientResponse(
-            id=p.id,
-            name=p.name,
-            cpf=p.cpf,
-            contact=p.contact,
-            birth_date=p.birth_date,
-            address=p.address,
-        )
+        PatientResponse.model_validate(p)
         for p in patients
     ]
-    is_htmx = request.headers.get("HX-request")
-
-    if is_htmx:
-        return templates.TemplateResponse(
-            name="patients/list_fragment.html",
-            request=request,
-            context={"patients": result},
-        )
-
+    
     return templates.TemplateResponse(
-        name="patients/list_full.html",
-        request=request,
-        context={"patients": result},
+        templote_name,
+        {
+            "request": request,
+            "patients": result
+        }
     )
 
 
 @router.get("/new", response_class=HTMLResponse, dependencies=[Depends(allow_patient_manage)])
 def form_patient(request: Request):
-    if request.headers.get("HX-request"):
-        return templates.TemplateResponse(
-            "patients/form_fragment.html", {"request": request}
-        )
-    return templates.TemplateResponse("patients/form_full.html", {"request": request})
+    templote_name = ("patients/form_fragment.html" if request.headers.get("HX-request")
+                     else "patients/form_full.html")
+    
+    return templates.TemplateResponse(templote_name, {"request": request})
 
 
 @router.get("/edit/{patient_id}", response_class=HTMLResponse, dependencies=[Depends(allow_patient_manage)])
 async def form_edit_patient(
     request: Request, patient_id: int, db: Session = Depends(get_db)
 ):
-    is_htmx = request.headers.get("HX-request")
-
+    
     db_patient = db.query(Patient).filter(Patient.id == patient_id).first()
     if db_patient:
+        templote_name = ("patients/form_fragment.html" if request.headers.get("HX-request")
+                     else "patients/form_full.html")
         patient = PatientResponse(
             id=db_patient.id,
             name=db_patient.name,
@@ -69,42 +59,19 @@ async def form_edit_patient(
             contact=db_patient.contact,
             address=db_patient.address,
         )
-        if is_htmx:
-            return templates.TemplateResponse(
-                name="patients/form_fragment.html",
-                request=request,
-                context={"patient": patient},
-            )
         return templates.TemplateResponse(
-            name="patients/form_full.html",
-            request=request,
-            context={"patient": patient},
-        )
-    patients = db.query(Patient).all()
-    result = [
-        PatientResponse(
-            id=p.id,
-            name=p.name,
-            cpf=p.cpf,
-            contact=p.contact,
-            birth_date=p.birth_date,
-            address=p.address,
-        )
-        for p in patients
-    ]
-    if is_htmx:
-        return templates.TemplateResponse(
-            name="components/not_found_error.html",
-            request=request,
-            context={
+            templote_name,
+            {
                 "request": request,
-                "return_point": "/patients",
-                "return_page": "a Lista de Pacientes",
-                "message": f"Paciente com id {patient_id} não existe.",
-            },
+                "patient": patient
+            }
         )
+
+    templote_name = ("components/not_found_error.html" if request.headers.get("HX-request")
+                     else "components/notfound_error_page.html")
+   
     return templates.TemplateResponse(
-        "components/notfound_error_page.html",
+        templote_name,
         {
             "request": request,
             "return_point": "/patients",
@@ -124,7 +91,13 @@ async def salvar_paciente(
     address: str = Form(None),
     db: Session = Depends(get_db),
 ):
-    date_obj = datetime.strptime(birth_date, "%Y-%m-%d").date()
+    patient_request = PatientCreate(
+        name=name,
+        cpf=cpf,
+        birth_date=datetime.strptime(birth_date, "%Y-%m-%d").date(),
+        contact=contact,
+        address=address
+    )
     try:
         exists = db.query(Patient).filter(Patient.cpf == cpf).first()
 
@@ -133,30 +106,25 @@ async def salvar_paciente(
                 "patients/form_fragment.html",
                 {
                     "request": request,
-                    "patient": Patient(
-                        name=name,
-                        cpf=cpf,
-                        birth_date=date_obj,
-                        contact=contact,
-                        address=address,
-                    ),  # Para não perder o que o usuário digitou
+                    "patient": patient_request,
                     "erro": "CPF utilizado por outro paciente",
                 },
             )
-        novo_paciente = Patient(
-            name=name, cpf=cpf, birth_date=date_obj, contact=contact, address=address
+        patient = Patient(
+            **patient_request.model_dump()
         )
 
-        db.add(novo_paciente)
+        db.add(patient)
         db.commit()
 
         # Após salvar, redirecionamos para a lista de pacientes usando HTMX
         patients = db.query(Patient).all()
+        result = [PatientResponse.model_validate(p) for p in patients]
         return templates.TemplateResponse(
             "patients/list_fragment.html",
             {
                 "request": request,
-                "patients": patients,
+                "patients": result,
                 "success": "Paciente cadastrado com sucesso!",
             },
         )
@@ -166,13 +134,7 @@ async def salvar_paciente(
             "patients/form_fragment.html",
             {
                 "request": request,
-                "patient": Patient(
-                    name=name,
-                    cpf=cpf,
-                    birth_date=date_obj,
-                    contact=contact,
-                    address=address,
-                ),
+                "patient": patient_request,
                 "erro": "Erro interno ao salvar os dados.",
             },
             status_code=500,
@@ -190,42 +152,44 @@ async def edit_patient(
     address: str = Form(None),
     db: Session = Depends(get_db),
 ):
-    date_obj = datetime.strptime(birth_date, "%Y-%m-%d").date()
-    patient = db.query(Patient).filter(Patient.id == patient_id).first()
+    patient_update = PatientCreate(
+        name=name,
+        cpf=cpf,
+        birth_date=datetime.strptime(birth_date, "%Y-%m-%d").date(),
+        contact=contact,
+        address=address
+    )
+    
+    db_patient = db.query(Patient).filter(Patient.id == patient_id).first()
     try:
-        if patient:
+        if db_patient:
             exists = db.query(Patient).filter(Patient.cpf == cpf).first()
 
-            if (patient.cpf != cpf and exists):
+            if (db_patient.cpf != patient_update.cpf and exists):
                 return templates.TemplateResponse(
                     "patients/form_fragment.html",
                     {
                         "request": request,
-                        "patient": Patient(
-                            name=name,
-                            cpf=cpf,
-                            birth_date=date_obj,
-                            contact=contact,
-                            address=address,
-                        ),  # Para não perder o que o usuário digitou
+                        "patient": PatientResponse(id=patient_id, **patient_update.model_dump()),  # Para não perder o que o usuário digitou
                         "erro": "CPF utilizado por outro paciente",
                     },
                 )
 
-            patient.name = name
-            patient.cpf = cpf
-            patient.birth_date = date_obj
-            patient.contact = contact
-            patient.address = address
+            db_patient.name = patient_update.name
+            db_patient.cpf = patient_update.cpf
+            db_patient.birth_date = patient_update.birth_date
+            db_patient.contact = patient_update.contact
+            db_patient.address = patient_update.address
 
             db.commit()
 
             patients = db.query(Patient).all()
+            result = [PatientResponse.model_validate(p) for p in patients]
             return templates.TemplateResponse(
                 "patients/list_fragment.html",
                 {
                     "request": request,
-                    "patients": patients,
+                    "patients": result,
                     "success": "Paciente Atualizado com sucesso!",
                 },
             )
@@ -243,13 +207,7 @@ async def edit_patient(
             "patients/form_fragment.html",
             {
                 "request": request,
-                "patient": Patient(
-                    name=name,
-                    cpf=cpf,
-                    birth_date=date_obj,
-                    contact=contact,
-                    address=address,
-                ),  # Para não perder o que o usuário digitou
+                "patient": patient_update,
                 "erro": f"Erro interno ao tentar salvar dados: {e}",
             },
         )
@@ -259,17 +217,18 @@ async def edit_patient(
 async def delete_patient(
     request: Request, patient_id: int, db: Session = Depends(get_db)
 ):
-    patient = db.query(Patient).filter(Patient.id == patient_id).first()
-    if patient:
-        db.delete(patient)
+    db_patient = db.query(Patient).filter(Patient.id == patient_id).first()
+    if db_patient:
+        db.delete(db_patient)
         db.commit()
         patients = db.query(Patient).all()
+        result = [PatientResponse.model_validate(p) for p in patients]
 
         return templates.TemplateResponse(
             "patients/list_fragment.html",
             {
                 "request": request,
-                "patients": patients,
+                "patients": result,
                 "success": "Paciente Excluido com sucesso!",
             },
         )
@@ -288,72 +247,3 @@ async def delete_patient(
 def amount_patients(db: Session = Depends(get_db)):
     count = db.query(Patient).count()
     return count
-
-
-# --- BUSCAR POR ID ---
-# @router.get("/{patient_id}", response_class=HTMLResponse)
-# def read_patient(
-#     patient_id: int,
-#     db: Session = Depends(get_db),
-# ):
-#     patient = db.query(Patient).filter(Patient.id == patient_id).first()
-#     if patient is None:
-#         raise HTTPException(status_code=404, detail="Paciente não encontrado")
-#     return patient
-
-
-# # --- CRIAR ---
-# @router.post("/", response_class=HTMLResponse, status_code=status.HTTP_201_CREATED)
-# def create_patient(
-#     patient: Annotated[str, Form()],
-#     db: Session = Depends(get_db),
-# ):
-#     # Validar CPF duplicado
-#     if db.query(Patient).filter(Patient.cpf == patient.cpf).first():
-#         raise HTTPException(
-#             status_code=400, detail="CPF já cadastrado para outro paciente"
-#         )
-
-#     new_patient = Patient(**patient.model_dump())
-
-#     db.add(new_patient)
-#     db.commit()
-#     db.refresh(new_patient)
-#     return new_patient
-
-
-# # --- ATUALIZAR ---
-# @router.put("/{patient_id}", response_class=HTMLResponse)
-# def update_patient(
-#     patient_id: int,
-#     patient_update: schemas.PatientCreate,
-#     db: Session = Depends(get_db),
-# ):
-#     db_patient = db.query(Patient).filter(Patient.id == patient_id).first()
-#     if not db_patient:
-#         raise HTTPException(status_code=404, detail="Paciente não encontrado")
-
-#     for key, value in patient_update.model_dump().items():
-#         setattr(db_patient, key, value)
-
-#     db.commit()
-#     db.refresh(db_patient)
-#     return db_patient
-
-
-# # --- DELETAR ---
-# @router.delete("/{patient_id}", status_code=status.HTTP_204_NO_CONTENT)
-# def delete_patient(
-#     patient_id: int,
-#     db: Session = Depends(get_db),
-# ):
-#     db_patient = db.query(Patient).filter(Patient.id == patient_id).first()
-#     if not db_patient:
-#         raise HTTPException(status_code=404, detail="Paciente não encontrado")
-
-#     # Nota de Pleno: Futuramente, verificar se existem consultas (appointments) vinculadas
-#     # antes de deletar, para manter a integridade do histórico médico.
-
-#     db.delete(db_patient)
-#     db.commit()
-#     return None

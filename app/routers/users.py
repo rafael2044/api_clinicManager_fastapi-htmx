@@ -1,27 +1,31 @@
 from fastapi import APIRouter, Request, Depends, Form, HTTPException
 from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
+
+
 from app.database import get_db
 from app.models import User, Employee
-from app.deps import templates, get_current_user
+from app.schemas import EmployeeResponse, UserCreate, UserResponse
+from app.deps import templates, get_current_user, RoleChecker
 from app.auth import get_password_hash
 
 router = APIRouter(prefix="/users", tags=["users"])
 
-@router.get("", response_class=HTMLResponse)
+allow_patient_manage = RoleChecker(["admin"])
+
+
+@router.get("", response_class=HTMLResponse, dependencies=[Depends(allow_patient_manage)])
 async def list_users(request: Request, db: Session = Depends(get_db)):
-    # Apenas administradores gerenciam usuários
-    if request.state.user.employee.role != "admin":
-        raise HTTPException(status_code=403)
-        
+
     users = db.query(User).all()
-    # Funcionários que ainda não possuem uma conta de usuário
-    available_employees = db.query(Employee).filter(~Employee.user_account.has()).all()
+    result_users = [UserResponse.model_validate(u) for u in users ]
     
+    available_employees = db.query(Employee).filter(~Employee.user_account.has()).all()
+    result_available_employees = [EmployeeResponse.model_validate(e) for e in available_employees]
     return templates.TemplateResponse("users/list_fragment.html", {
         "request": request,
-        "users": users,
-        "employees": available_employees
+        "users": result_users,
+        "employees": result_available_employees
     })
 
 @router.post("/save", response_class=HTMLResponse)
@@ -32,12 +36,19 @@ async def save_user(
     password: str = Form(...),
     db: Session = Depends(get_db)
 ):
-    new_user = User(
+    user_request = UserCreate(
         username=username,
-        hashed_password=get_password_hash(password),
-        employee_id=employee_id,
+        password=password,
+        employee_id=employee_id
+    )
+    
+    new_user = User(
+        username=user_request.username,
+        hashed_password=get_password_hash(user_request.password),
+        employee_id=user_request.employee_id,
         is_active=True
     )
+    
     db.add(new_user)
     db.commit()
     # Retorna para a lista atualizada
