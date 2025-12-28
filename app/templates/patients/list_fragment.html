@@ -1,9 +1,9 @@
-<div class="bg-white shadow-md rounded-lg overflow-hidden">
+<div class="bg-white shadow-md rounded-lg overflow-hidden p-6">
     {% if success %}
     <div
         class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-4"
     >
-        {{ success }}
+    {{ success }}
     </div>
     {% endif %} {% if error %}
     <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4">
@@ -76,4 +76,37 @@
             {% endfor %}
         </tbody>
     </table>
+    <div class="flex items-center justify-between mt-6 border-t pt-4">
+        <div class="text-sm text-gray-700">
+            Página <span class="font-semibold">{{ current_page }}</span> de <span class="font-semibold">{{ total_pages }}</span>
+        </div>
+        
+        <div class="flex space-x-2">
+            {% if has_prev %}
+            <button hx-get="/patients?page={{ current_page - 1 }}"
+                    hx-target="#main-content"
+                    hx-push-url="true"
+                    class="px-4 py-2 border rounded text-sm font-medium hover:bg-gray-50 transition">
+                Anterior
+            </button>
+            {% else %}
+            <button disabled class="px-4 py-2 border rounded text-sm font-medium text-gray-300 cursor-not-allowed">
+                Anterior
+            </button>
+            {% endif %}
+
+            {% if has_next %}
+            <button hx-get="/patients?page={{ current_page + 1 }}"
+                    hx-target="#main-content"
+                    hx-push-url="true"
+                    class="px-4 py-2 border rounded text-sm font-medium hover:bg-gray-50 transition">
+                Próximo
+            </button>
+            {% else %}
+            <button disabled class="px-4 py-2 border rounded text-sm font-medium text-gray-300 cursor-not-allowed">
+                Próximo
+            </button>
+            {% endif %}
+        </div>
+    </div>
 </div>

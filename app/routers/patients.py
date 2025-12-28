@@ -15,11 +15,18 @@ router = APIRouter(prefix="/patients", tags=["Patients"])
 allow_patient_manage = RoleChecker(["admin", "receptionist"])
 
 @router.get("", response_class=HTMLResponse, dependencies=[Depends(allow_patient_manage)])
-async def list_complete_patients(request: Request, db: Session = Depends(get_db)):
+async def list_complete_patients(
+    request: Request,
+    db: Session = Depends(get_db),
+    page: int = 1,
+    size:int = 5):
+    offset = (page - 1) * size
+    total_count = db.query(Patient).count()
+    patients = db.query(Patient).offset(offset).limit(size).all()
+    total_pages = (total_count + size - 1) // size
     templote_name = ("patients/list_fragment.html" if request.headers.get("HX-request")
                      else "patients/list_full.html")
     
-    patients = db.query(Patient).all()
     result = [
         PatientResponse.model_validate(p)
         for p in patients
@@ -29,7 +36,11 @@ async def list_complete_patients(request: Request, db: Session = Depends(get_db)
         templote_name,
         {
             "request": request,
-            "patients": result
+            "patients": result,
+            "current_page": page,
+            "total_pages": total_pages,
+            "has_next": page < total_pages,
+            "has_prev": page > 1,
         }
     )
 
