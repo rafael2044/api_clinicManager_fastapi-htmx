@@ -1,123 +1,63 @@
-from datetime import date, timedelta
-from typing import Annotated, Optional
-
-from fastapi import APIRouter, Depends, Form, HTTPException
-from fastapi.responses import HTMLResponse
-from models import Appointment, Employee, Patient
+from fastapi import APIRouter, Request, Depends, Form
 from sqlalchemy.orm import Session
+from app.database import get_db
+from app.models import Appointment, Patient, Employee
+from app.deps import templates, get_current_user
 
-from app.deps import get_db
+router = APIRouter(prefix="/appointments", tags=["appointments"])
 
-router = APIRouter(prefix="/appointments", tags=["Appointments"])
+@router.get("/list")
+async def list_appointments(request: Request, db: Session = Depends(get_db)):
+    # Buscamos os agendamentos ordenados pela string de data
+    appointments = db.query(Appointment).order_by(Appointment.date.asc()).all()
+    
+    # Tratamento simples para exibição amigável da data no template
+    for app in appointments:
+        app.display_date = app.date.replace("T", " ")
+        
+    return templates.TemplateResponse("appointments/list_fragment.html", {
+        "request": request,
+        "appointments": appointments
+    })
 
+@router.get("/new")
+async def new_appointment(request: Request, db: Session = Depends(get_db)):
+    patients = db.query(Patient).all()
+    doctors = db.query(Employee).filter(Employee.role == "doctor").all()
+    return templates.TemplateResponse("appointments/form_fragment.html", {
+        "request": request,
+        "patients": patients,
+        "doctors": doctors
+    })
 
-# --- LISTAR (Com filtros opcionais) ---
-@router.get("/", response_class=HTMLResponse)
-def read_appointments(
-    skip: int = 0,
-    limit: int = 100,
-    doctor_id: Optional[int] = None,  # Filtro opcional
-    date: Optional[str] = None,  # Filtro por dia (YYYY-MM-DD)
-    db: Session = Depends(get_db),
+@router.post("/save")
+async def save_appointment(
+    request: Request,
+    patient_id: int = Form(...),
+    doctor_id: int = Form(...),
+    date: str = Form(...), # Recebe 'YYYY-MM-DDTHH:MM' do input
+    cost: float = Form(0.0),
+    notes: str = Form(None),
+    db: Session = Depends(get_db)
 ):
-    query = db.query(Appointment)
-
-    # Aplica filtros se foram passados na URL
-    if doctor_id:
-        query = query.filter(Appointment.doctor_id == doctor_id)
-    if date:
-        # Filtra strings que começam com a data (ex: '2025-12-14')
-        query = query.filter(Appointment.date.like(f"{date}%"))
-
-    appointments = (
-        query.order_by(Appointment.date.asc()).offset(skip).limit(limit).all()
+    # O SQLite armazenará a string exatamente como vem do input datetime-local
+    new_app = Appointment(
+        patient_id=patient_id,
+        doctor_id=doctor_id,
+        date=date,
+        cost=cost,
+        notes=notes,
+        status="scheduled"
     )
-    return appointments
-
-
-@router.get("/count")
-def count_appointments_today(db: Session = Depends(get_db)):
-    date_start = date.today().strftime("%Y-%m-%dT00:00:00")
-    date_last = (date.today() + timedelta(days=1)).strftime("%Y-%m-%dT00:00:00")
-    count = (
-        db.query(Appointment)
-        .filter(Appointment.date >= date_start)
-        .filter(Appointment.date <= date_last)
-        .count()
-    )
-    return count
-
-
-# --- CRIAR ---
-@router.post("/", response_class=HTMLResponse)
-def create_appointment(
-    appointment: Annotated[str, Form()],
-    db: Session = Depends(get_db),
-):
-    # 1. Validar Paciente
-    patient = db.query(Patient).filter(Patient.id == appointment.patient_id).first()
-    if not patient:
-        raise HTTPException(status_code=404, detail="Paciente não encontrado")
-
-    # 2. Validar Médico
-    doctor = db.query(Employee).filter(Employee.id == appointment.doctor_id).first()
-    if not doctor:
-        raise HTTPException(status_code=404, detail="Médico não encontrado")
-
-    # 2.1 Regra de Negócio: Verificar se é mesmo um médico
-    if doctor.role != "doctor":
-        raise HTTPException(
-            status_code=400, detail="O funcionário selecionado não é um médico"
-        )
-
-    # 3. Criar
-    # Convertemos o datetime do Pydantic para string ISO para o SQLite
-    db_appointment = Appointment(
-        patient_id=appointment.patient_id,
-        doctor_id=appointment.doctor_id,
-        date=appointment.date.isoformat(),
-        status=appointment.status,
-        notes=appointment.notes,
-        cost=appointment.cost,
-    )
-
-    db.add(db_appointment)
+    db.add(new_app)
     db.commit()
-    db.refresh(db_appointment)
-    return db_appointment
+    
+    return await list_appointments(request, db)
 
-
-# --- ATUALIZAR STATUS (Ex: Cancelar ou Finalizar) ---
-@router.post("/{appointment_id}/status", response_class=HTMLResponse)
-def update_appointment_status(
-    appointment_id: int,
-    status_update: str,  # Recebe string direta query param ou body simples? Vamos fazer query param para simplificar
-    db: Session = Depends(get_db),
-):
-    appointment = db.query(Appointment).filter(Appointment.id == appointment_id).first()
-    if not appointment:
-        raise HTTPException(status_code=404, detail="Agendamento não encontrado")
-
-    valid_statuses = ["scheduled", "waiting", "in_progress", "completed", "canceled"]
-    if status_update not in valid_statuses:
-        raise HTTPException(status_code=400, detail="Status inválido")
-
-    appointment.status = status_update
-    db.commit()
-    db.refresh(appointment)
-    return appointment
-
-
-# --- DELETAR ---
-@router.delete("/{appointment_id}", response_class=HTMLResponse)
-def delete_appointment(
-    appointment_id: int,
-    db: Session = Depends(get_db),
-):
-    appointment = db.query(Appointment).filter(Appointment.id == appointment_id).first()
-    if not appointment:
-        raise HTTPException(status_code=404, detail="Agendamento não encontrado")
-
-    db.delete(appointment)
-    db.commit()
-    return None
+@router.post("/update-status/{app_id}")
+async def update_status(app_id: int, status: str = Form(...), db: Session = Depends(get_db)):
+    app = db.query(Appointment).filter(Appointment.id == app_id).first()
+    if app:
+        app.status = status
+        db.commit()
+    return Response(headers={"HX-Refresh": "true"}) # Recarrega a lista para aplicar cores
