@@ -3,8 +3,7 @@
         <label class="block text-sm font-medium text-purple-800 mb-1">Função / Cargo</label>
         <select name="role" class="w-full rounded-md border-purple-200 border p-2 bg-white">
             <option value="receptionist" {{ 'selected' if employee and employee.role == 'receptionist' }}>Recepcionista</option>
-            <option value="admin" {{ 'selected' if employee and employee.role == 'admin' }}>Administrativo / Financeiro</option>
-            <option value="nursing" {{ 'selected' if employee and employee.role == 'nursing' }}>Enfermagem</option>
+            <option value="admin" {{ 'selected' if employee and employee.role == 'admin' }}>Administrativo</option>
         </select>
     </div>
     <div>
