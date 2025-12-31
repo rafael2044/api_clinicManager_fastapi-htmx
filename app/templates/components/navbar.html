@@ -9,7 +9,7 @@
             ClinicManager
         </button>
         {% if request.state.user %}
-            {%if request.state.user.employee.role == "admin" %}
+            {% if request.state.user.employee.role == "admin" %}
             <div class="flex space-x-2">
                 <button
                     hx-get="/patients"

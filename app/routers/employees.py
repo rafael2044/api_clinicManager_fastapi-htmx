@@ -6,7 +6,7 @@ from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session, joinedload
 
 from app.deps import get_db, templates
-from app.models import Employee, Specialty
+from app.models import Employee, Specialty, User
 from app.schemas import EmployeeCreate, EmployeeResponse, SpecialtyResponse
 
 router = APIRouter(prefix="/employees", tags=["Employees"])
@@ -215,6 +215,9 @@ async def save_employee(
 async def delete_employee(emp_id: int, db: Session = Depends(get_db)):
     emp = db.query(Employee).filter(Employee.id == emp_id).first()
     if emp:
+        user = db.query(User).filter(User.employee_id == emp.id).first()
+        if user:
+            db.delete(user)
         db.delete(emp)
         db.commit()
     return Response(status_code=200)
