@@ -23,28 +23,38 @@ async def login(
     password: str = Form(...),
     db: Session = Depends(get_db),
 ):
-    user = db.query(User).filter(User.username == username).first()
-    if not user or not verify_password(password, user.hashed_password) or not user.is_active:
-        message = "Usuário ou senha inválidos"
-        if not user.is_active and verify_password(password, user.hashed_password):
-            message = "Usuário desativado."
+    try:
+        user = db.query(User).filter(User.username == username).first()
+        if not user:
+            return templates.TemplateResponse(
+                "auth/login.html", {"request": request, "error": "Usuário Não existe."}
+            )
+        if user and not verify_password(password, user.hashed_password):
+            return templates.TemplateResponse(
+                "auth/login.html", {"request": request, "error": "Senha inválida."}
+            )
+        if user and verify_password(password, user.hashed_password) and not user.is_active:
+            return templates.TemplateResponse(
+                "auth/login.html", {"request": request, "error": "Usuário desativado."}
+            )
 
-        return templates.TemplateResponse(
-            "auth/login.html", {"request": request, "error": message}
+        token = create_access_token({"sub": user.username})
+
+        # Criamos a resposta e setamos o Cookie
+        response = Response(headers={"HX-Redirect": "/"})  # Redireciona para home via HTMX
+        response.set_cookie(
+            key="access_token",
+            value=f"Bearer {token}",
+            httponly=True,  # Impede acesso via JavaScript (Segurança)
+            max_age=28800,
+            samesite="lax",
         )
-
-    token = create_access_token({"sub": user.username})
-
-    # Criamos a resposta e setamos o Cookie
-    response = Response(headers={"HX-Redirect": "/"})  # Redireciona para home via HTMX
-    response.set_cookie(
-        key="access_token",
-        value=f"Bearer {token}",
-        httponly=True,  # Impede acesso via JavaScript (Segurança)
-        max_age=28800,
-        samesite="lax",
-    )
-    return response
+        return response
+    except Exception as e:
+        print(e)
+        return templates.TemplateResponse(
+                "auth/login.html", {"request": request, "error": "Erro interno no servidor."}
+            )
 
 
 @router.get("/logout")
