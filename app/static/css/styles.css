@@ -1,0 +1,85 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box; /* Garante que padding não aumente o tamanho dos elementos */
+}
+
+body {
+    font-family: 'Segoe UI', sans-serif;
+    background-color: #f4f6f9;
+    display: flex; /* Cria o layout principal: Sidebar | Conteúdo */
+    height: 100vh;
+    overflow: hidden; /* Evita barra de rolagem dupla */
+}
+
+/* 2. SIDEBAR (Lateral) */
+aside {
+    width: 250px;
+    background-color: #343a40; /* Cinza escuro */
+    color: white;
+    display: flex;
+    flex-direction: column; /* Itens um embaixo do outro */
+    padding: 20px;
+}
+
+aside nav {
+    display: flex; 
+    flex-direction: column;
+}
+
+aside h2 {
+    margin-bottom: 30px;
+    text-align: center;
+    font-size: 1.2rem;
+}
+
+.nav-link {
+    color: #c2c7d0;
+    text-decoration: none; /* Remove o sublinhado */
+    padding: 10px;
+    margin-bottom: 5px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: 0.3s; /* Suaviza a mudança de cor */
+}
+
+.nav-link:hover {
+    background-color: #495057;
+    color: white;
+}
+
+.btn-logout {
+    height: 100%;
+    padding: 8px 10px;
+    border-radius: 4px;
+    box-sizing: border-box;
+    background-color: oklch(0.577 0.245 27.325);
+    color: white;
+}
+
+.btn-logout:hover {
+    background-color: oklch(0.505 0.213 27.518);
+}
+
+/* 3. ÁREA PRINCIPAL (Wrapper) */
+.content {
+    flex: 1; /* Ocupa todo o espaço que sobrar ao lado da sidebar */
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto; /* Permite rolar apenas o conteúdo, não a sidebar */
+}
+
+header {
+    background-color: white;
+    height: 60px;
+    display: flex; /* Flexbox para alinhar itens */
+    justify-content: space-between; /* Um na ponta esquerda, outro na direita */
+    align-items: center; /* Centraliza verticalmente */
+    padding: 0 30px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.user-info {
+    display: flex;
+    gap: 5px;
+}

@@ -1,0 +1,51 @@
+<aside>
+    <nav>
+        <h2>ClinicManager</h2>
+        <a
+            hx-get="/"
+            hx-target="#main-content"
+            hx-push-url="true"
+            class="nav-link"
+        >
+            Pagina Inicial
+        </a>
+        {% if request.state.user %}
+        {% if request.state.user.employee.role == "admin" %}
+            <a
+                hx-get="/patients"
+                hx-target="#main-content"
+                hx-push-url="true"
+                class="nav-link"
+            >
+                Pacientes
+            </a>
+
+            <a
+                hx-get="/employees"
+                hx-target="#main-content"
+                hx-push-url="true"
+                class="nav-link"
+            >
+                Funcionários
+            </a>
+            <a
+                hx-get="/users"
+                hx-target="#main-content"
+                hx-push-url="true"
+                class="nav-link"
+            >
+                Usuários
+            </a>
+
+            <a
+                hx-get="/appointments"
+                hx-target="#main-content"
+                hx-push-url="true"
+                class="nav-link"
+            >
+                Agenda
+            </a>
+        {% endif %}
+        {% endif %}
+    </nav>
+</aside>

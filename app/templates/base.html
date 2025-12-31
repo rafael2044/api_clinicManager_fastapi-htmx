@@ -3,21 +3,34 @@
     <head>
         {% include 'components/head.html' %}
     </head>
-    <body class="bg-gray-50 text-gray-900">
-        {% include "components/navbar.html" %}
+    <body>
+        {% include "components/sidebar.html" %}
 
-        <main class="container mx-auto px-4 py-8">
+        <div class="content">
+            <header>
+                <h3>{% block title %}{% endblock %}</h3>
+                {% if request.state.user %}
+                <div class="user-info">
+                    <span style="margin-right: 15px;">Olá, {{ request.state.user.username }}</span>
+                    <span>{{ request.state.user.role }}</span>
+                    <button
+                        hx-get="/auth/logout"
+                        class="btn-logout"
+                    >
+                        Sair
+                    </button>
+                </div>
+                {% endif %}
+            </header>
+            
             <div id="main-content">{% block content %}{% endblock %}</div>
-        </main>
-
-        <div
-            class="htmx-indicator fixed bottom-4 right-4 bg-yellow-400 p-2 rounded shadow"
-            id="loader"
-        >
-            Carregando...
+            <div
+                class="htmx-indicator fixed bottom-4 right-4 bg-yellow-400 p-2 rounded shadow"
+                id="loader"
+            >
+                Carregando...
+            </div>
         </div>
-
-        <script src="{{ url_for('static', path='js/updateActiveBar.js') }}"></script>
 
         <style>
             .htmx-indicator {
