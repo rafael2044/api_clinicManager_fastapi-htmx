@@ -6,25 +6,32 @@ from app.deps import templates, get_current_user
 
 router = APIRouter(prefix="/appointments", tags=["appointments"])
 
-@router.get("/list")
+@router.get("")
 async def list_appointments(request: Request, db: Session = Depends(get_db)):
-    # Buscamos os agendamentos ordenados pela string de data
+    template_name = (
+        "appointments/list_fragment.html" if request.headers.get('HX-request')
+        else "appointments/list_full.html"
+    )
     appointments = db.query(Appointment).order_by(Appointment.date.asc()).all()
     
     # Tratamento simples para exibição amigável da data no template
     for app in appointments:
         app.display_date = app.date.replace("T", " ")
         
-    return templates.TemplateResponse("appointments/list_fragment.html", {
+    return templates.TemplateResponse(template_name, {
         "request": request,
         "appointments": appointments
     })
 
 @router.get("/new")
 async def new_appointment(request: Request, db: Session = Depends(get_db)):
+    template_name = (
+        "appointments/form_fragment.html" if request.headers.get('HX-request')
+        else "appointments/form_full.html"
+    )
     patients = db.query(Patient).all()
     doctors = db.query(Employee).filter(Employee.role == "doctor").all()
-    return templates.TemplateResponse("appointments/form_fragment.html", {
+    return templates.TemplateResponse(template_name, {
         "request": request,
         "patients": patients,
         "doctors": doctors
