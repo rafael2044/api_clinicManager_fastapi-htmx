@@ -5,3 +5,4 @@ argon2-cffi
 python-jose[cryptography]
 python-multipart
 python-dotenv
+alembic
