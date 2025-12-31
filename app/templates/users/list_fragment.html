@@ -67,11 +67,4 @@
     </div>
 </div>
 
-<script>
-    // Escuta o evento enviado pelo servidor para fechar o modal após sucesso
-    document.body.addEventListener('closeModal', function() {
-        const modal = document.getElementById('modal-container');
-        if (modal) modal.remove();
-        alert('Senha atualizada com sucesso!');
-    });
-</script>
+<script src="{{ url_for('static', path='js/list_users.js') }}"></script>
