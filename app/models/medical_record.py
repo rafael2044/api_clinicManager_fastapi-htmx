@@ -20,7 +20,7 @@ class MedicalRecord(Base):
     prescription = Column(JSON)
     physical_exam = Column(Text)  # Exame físico
     medical_certificate = Column(Text, nullable=True)  # Texto do atestado se houver
-    icd_code = Column(String(10))  # CID-10
+    cid_code = Column(String(10))  # CID-10
 
     created_at = Column(String, default=datetime.datetime.utcnow().isoformat)
 

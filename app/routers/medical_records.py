@@ -127,7 +127,7 @@ async def save_medical_record(
     physical_exam: str = Form(...),
     diagnosis: str = Form(...),
     prescription: str = Form(...),
-    icd_code: str = Form(None),
+    cid_code: str = Form(None),
     medical_certificate: str = Form(None),
     db: Session = Depends(get_db)
 ):
@@ -139,7 +139,7 @@ async def save_medical_record(
             physical_exam=physical_exam,
             diagnosis=diagnosis,
             prescription={"text": prescription}, # Estrutura JSON
-            icd_code=icd_code,
+            cid_code=cid_code,
             medical_certificate=medical_certificate
         )
         

@@ -39,7 +39,7 @@
                         Dr(a). {{ rec.appointment.doctor.name }}
                     </td>
                     <td class="px-4 py-3">
-                        <span class="badge bg-secondary-subtle text-secondary border">{{ rec.icd_code or 'N/A' }}</span>
+                        <span class="badge bg-secondary-subtle text-secondary border">{{ rec.cid_code or 'N/A' }}</span>
                     </td>
                     <td class="px-4 py-3 text-end">
                         <button hx-get="/consultations/view/{{ rec.id }}" hx-target="#modal-slot"
