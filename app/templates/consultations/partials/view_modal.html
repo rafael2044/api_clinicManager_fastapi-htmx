@@ -1,0 +1,65 @@
+<div class="modal fade show d-block" style="background: rgba(0,0,0,0.5);" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-light">
+                <h5 class="modal-title fw-bold">
+                    <i class="bi bi-file-medical text-primary me-2"></i>Prontuário Clínico
+                </h5>
+                <button type="button" class="btn-close" onclick="this.closest('.modal').remove()"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <label class="small text-muted text-uppercase fw-bold">Paciente</label>
+                        <p class="fw-bold mb-0">{{ record.appointment.patient.name }}</p>
+                        <small>{{ record.appointment.patient.cpf }}</small>
+                    </div>
+                    <div class="col-md-6 text-md-end">
+                        <label class="small text-muted text-uppercase fw-bold">Data do Atendimento</label>
+                        <p class="mb-0">{{ record.created_at[:10] }} às {{ record.created_at[11:16] }}</p>
+                    </div>
+
+                    <hr>
+
+                    <div class="col-12">
+                        <h6 class="fw-bold text-primary">Anamnese e Exame Clínico</h6>
+                        <div class="p-3 bg-light rounded mb-3">
+                            <label class="d-block small fw-bold text-secondary">QUEIXA PRINCIPAL</label>
+                            <p class="mb-3">{{ record.chief_complaint }}</p>
+                            
+                            <label class="d-block small fw-bold text-secondary">EXAME FÍSICO</label>
+                            <p class="mb-0 text-pre-wrap">{{ record.physical_exam }}</p>
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <h6 class="fw-bold text-primary">Diagnóstico ({{ record.icd_code }})</h6>
+                        <p class="p-3 border rounded">{{ record.diagnosis }}</p>
+                    </div>
+
+                    <div class="col-12">
+                        <h6 class="fw-bold text-success"><i class="bi bi-capsule-pill me-2"></i>Prescrição / Conduta</h6>
+                        <div class="p-3 border-start border-success border-4 bg-success bg-opacity-10 rounded">
+                            <p class="mb-0" style="white-space: pre-wrap;">{{ record.prescription.text }}</p>
+                        </div>
+                    </div>
+
+                    {% if record.medical_certificate %}
+                    <div class="col-12">
+                        <h6 class="fw-bold text-warning"><i class="bi bi-file-earmark-text me-2"></i>Atestado Emitido</h6>
+                        <div class="p-3 border rounded bg-light italic">
+                            {{ record.medical_certificate }}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">Fechar</button>
+                <button class="btn btn-primary" onclick="window.print()">
+                    <i class="bi bi-printer me-1"></i> Imprimir Prontuário
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

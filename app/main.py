@@ -5,7 +5,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.database import Base, engine
 from app.deps import get_current_user, templates
-from app.routers import auth, employees, patients, specialties, users, appointments
+from app.routers import auth, employees, patients, specialties, users, appointments, medical_records
 
 # Initialize FASTAPI
 
@@ -19,6 +19,8 @@ app.include_router(specialties.router, dependencies=[Depends(get_current_user)])
 app.include_router(users.router, dependencies=[Depends(get_current_user)])
 app.include_router(employees.router, dependencies=[Depends(get_current_user)])
 app.include_router(appointments.router, dependencies=[Depends(get_current_user)])
+app.include_router(medical_records.router, dependencies=[Depends(get_current_user)])
+
 
 @app.exception_handler(302)
 @app.exception_handler(401)  # Caso prefira usar 401 para "Não autorizado"

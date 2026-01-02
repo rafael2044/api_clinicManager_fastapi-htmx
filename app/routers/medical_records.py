@@ -1,76 +1,174 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from datetime import datetime
+from fastapi import APIRouter, Depends, Form, Request, Response
+from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
-from typing import List, Optional
 
-from .. import database, models, schemas
-from ..deps import get_db, get_current_user
+from app.deps import templates, get_db, RoleChecker
+from app.models import Appointment, MedicalRecord, Patient
+# Supondo que você tenha esses schemas para validação
+# from app.schemas import MedicalRecordCreate 
 
-router = APIRouter(
-    prefix="/medical-records",
-    tags=["Medical Records"]
-)
+router = APIRouter(prefix="/consultations", tags=["Consultations"])
 
-# --- LISTAR (Histórico do Paciente) ---
-@router.get("/", response_model=List[schemas.MedicalRecordResponse])
-def read_medical_records(
-    patient_id: Optional[int] = None, # Filtro principal
-    doctor_id: Optional[int] = None,
+# Apenas médicos podem acessar esta rota
+allow_doctor = RoleChecker(["doctor", "admin"])
+
+@router.get("", response_class=HTMLResponse, dependencies=[Depends(allow_doctor)])
+async def list_consultations(
+    request: Request, 
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_user)
+    success: str = ''
 ):
-    query = db.query(models.MedicalRecord)
+    # Obtém o ID do funcionário/médico logado através do estado do request (setado no auth)
+    doctor_id = request.state.user.employee_id
+    today = datetime.now().strftime("%Y-%m-%d")
     
-    # Geralmente queremos filtrar pelos relacionamentos via Appointment
-    if patient_id:
-        query = query.join(models.Appointment).filter(models.Appointment.patient_id == patient_id)
+    # Filtra pacientes agendados para HOJE que estão esperando ou em atendimento
+    appointments = db.query(Appointment).filter(
+        Appointment.doctor_id == doctor_id,
+        Appointment.date.contains(today),
+        Appointment.status.in_(["scheduled", "waiting", "in_progress"])
+    ).order_by(Appointment.date.asc()).all()
     
-    if doctor_id:
-        query = query.join(models.Appointment).filter(models.Appointment.doctor_id == doctor_id)
-
-    records = query.all()
+    template_name = ("consultations/list_consultations_fragment.html" if request.headers.get("HX-request")
+                     else "consultations/list_consultations_full.html")
     
-    # Conversão manual do JSON de prescrição se necessário (SQLAlchemy costuma fazer automático, 
-    # mas o Pydantic valida a estrutura)
-    return records
-
-# --- CRIAR (Finalizar Atendimento) ---
-@router.post("/", response_model=schemas.MedicalRecordResponse, status_code=status.HTTP_201_CREATED)
-def create_medical_record(
-    record: schemas.MedicalRecordCreate, 
-    db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_user)
-):
-    # 1. Validar se a consulta existe
-    appointment = db.query(models.Appointment).filter(models.Appointment.id == record.appointment_id).first()
-    if not appointment:
-        raise HTTPException(status_code=404, detail="Consulta não encontrada")
-
-    # 2. Validar se o utilizador atual é o médico da consulta (Segurança)
-    # Nota: Em sistemas reais, devemos validar se current_user.employee_id == appointment.doctor_id
-    # Para facilitar testes, deixarei comentado, mas é uma boa prática.
-    # if current_user.employee_id != appointment.doctor_id and current_user.employee.role != 'admin':
-    #     raise HTTPException(status_code=403, detail="Não tem permissão para preencher este prontuário")
-
-    # 3. Validar se já existe prontuário para esta consulta (Evitar duplicatas)
-    if appointment.medical_record:
-        raise HTTPException(status_code=400, detail="Esta consulta já possui um prontuário registado")
-
-    # 4. Criar o Prontuário
-    # Precisamos converter a lista de Pydantic models para lista de dicts para salvar no JSON do SQLite
-    prescription_json = [item.model_dump() for item in record.prescription]
-
-    new_record = models.MedicalRecord(
-        appointment_id=record.appointment_id,
-        chief_complaint=record.chief_complaint,
-        diagnosis=record.diagnosis,
-        prescription=prescription_json
+    return templates.TemplateResponse(
+        template_name,
+        {
+            "request": request,
+            "appointments": appointments,
+            "success": success,
+            "now": datetime.now()
+        }
     )
+
+@router.get("/history", response_class=HTMLResponse)
+async def list_medical_history(
+    request: Request,
+    db: Session = Depends(get_db),
+    page: int = 1,
+    size: int = 10,
+    search: str = ""
+):
+    offset = (page - 1) * size
     
-    db.add(new_record)
+    # Query base unindo prontuário com agendamento e paciente
+    query = db.query(MedicalRecord).join(Appointment).join(Patient)
     
-    # 5. Side-Effect: Atualizar status da consulta para 'completed'
-    appointment.status = "completed"
+    if search:
+        query = query.filter(Patient.name.contains(search) | Patient.cpf.contains(search))
     
-    db.commit()
-    db.refresh(new_record)
-    return new_record
+    total_count = query.count()
+    records = query.order_by(MedicalRecord.created_at.desc()).offset(offset).limit(size).all()
+    total_pages = (total_count + size - 1) // size
+    
+    template_name = ("consultations/history_fragment.html" if request.headers.get("HX-request")
+                     else "consultations/history_full.html")
+    
+    return templates.TemplateResponse(
+        template_name,
+        {
+            "request": request,
+            "records": records,
+            "current_page": page,
+            "total_pages": total_pages,
+            "has_next": page < total_pages,
+            "has_prev": page > 1,
+            "search": search
+        }
+    )
+
+@router.get("/view/{record_id}", response_class=HTMLResponse)
+async def view_medical_record(request: Request, record_id: int, db: Session = Depends(get_db)):
+    record = db.query(MedicalRecord).filter(MedicalRecord.id == record_id).first()
+    
+    if not record:
+        return templates.TemplateResponse("components/not_found_error.html", {"request": request})
+        
+    return templates.TemplateResponse(
+        "consultations/partials/view_modal.html",
+        {
+            "request": request,
+            "record": record
+        }
+    )
+
+@router.get("/start/{appointment_id}", response_class=HTMLResponse, dependencies=[Depends(allow_doctor)])
+async def start_consultation(
+    request: Request, 
+    appointment_id: int, 
+    db: Session = Depends(get_db)
+):
+    appointment = db.query(Appointment).filter(Appointment.id == appointment_id).first()
+    
+    if not appointment:
+        return templates.TemplateResponse("components/not_found_error.html", {"request": request})
+
+    # Se o paciente estava apenas agendado ou esperando, muda para 'em progresso'
+    if appointment.status in ["scheduled", "waiting"]:
+        appointment.status = "in_progress"
+        db.commit()
+
+    return templates.TemplateResponse(
+        "consultations/partials/consultation_form.html",
+        {
+            "request": request,
+            "appointment": appointment,
+            "now": datetime.now()
+        }
+    )
+
+@router.post("/save/{appointment_id}", response_class=HTMLResponse, dependencies=[Depends(allow_doctor)])
+async def save_medical_record(
+    request: Request,
+    appointment_id: int,
+    chief_complaint: str = Form(...),
+    physical_exam: str = Form(...),
+    diagnosis: str = Form(...),
+    prescription: str = Form(...),
+    icd_code: str = Form(None),
+    medical_certificate: str = Form(None),
+    db: Session = Depends(get_db)
+):
+    try:
+        # 1. Cria o registro médico (Prontuário)
+        new_record = MedicalRecord(
+            appointment_id=appointment_id,
+            chief_complaint=chief_complaint,
+            physical_exam=physical_exam,
+            diagnosis=diagnosis,
+            prescription={"text": prescription}, # Estrutura JSON
+            icd_code=icd_code,
+            medical_certificate=medical_certificate
+        )
+        
+        # 2. Atualiza o status do agendamento para concluído
+        appointment = db.query(Appointment).filter(Appointment.id == appointment_id).first()
+        if appointment:
+            appointment.status = "completed"
+        
+        db.add(new_record)
+        db.commit()
+
+        # Retorna para a lista de consultas com push url
+        response = await list_consultations(
+            request, 
+            db, 
+            success=f"Atendimento de {appointment.patient.name} finalizado com sucesso."
+        )
+        response.headers['HX-Push-Url'] = '/consultations'
+        return response
+
+    except Exception as e:
+        db.rollback()
+        appointment = db.query(Appointment).filter(Appointment.id == appointment_id).first()
+        return templates.TemplateResponse(
+            "consultations/consultation_form.html",
+            {
+                "request": request,
+                "appointment": appointment,
+                "now": datetime.now(),
+                "erro": f"Erro ao salvar prontuário: {str(e)}"
+            }
+        )
