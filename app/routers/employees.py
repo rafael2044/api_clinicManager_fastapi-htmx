@@ -157,7 +157,10 @@ async def save_employee(
         try:
             db.add(new_employee)
             db.commit()
-            return await list_employees(request, db, success="Funcionário cadastrado com sucesso.")  # Retorna a lista atualizada
+            response = await list_employees(request, db, success="Funcionário cadastrado com sucesso.")  # Retorna a lista atualizada
+            response.headers['HX-Push-Url'] = "/employees"
+            return response
+        
         except Exception as e:
             db.rollback()
             return templates.TemplateResponse(
@@ -181,7 +184,9 @@ async def save_employee(
                 db_employee.specialty_id = specialty_id if employee_request.role == "doctor" else None
                 db_employee.department = department if employee_request.role != "doctor" else None
                 db.commit()
-                return await list_employees(request, db, success="Funcionário atualizado com sucesso.")
+                response = await list_employees(request, db, success="Funcionário atualizado com sucesso.")
+                response.headers["HX-Push-Url"] = "/employees"
+                return response
             template_name = (
                 "employees/form_fragment.html" if request.headers.get("HX-request") else
                 "employees/form_full.html"

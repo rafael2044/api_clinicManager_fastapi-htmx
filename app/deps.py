@@ -64,7 +64,7 @@ class RoleChecker:
         if user.employee.role == "admin":
             return True
             
-        if user.role not in self.allowed_roles:
+        if user.employee.role not in self.allowed_roles:
             # Se for HTMX, podemos redirecionar para uma página de "Acesso Negado"
             if request.headers.get("HX-Request"):
                 raise HTTPException(status_code=403, headers={"HX-Retarget": "#main-content"})

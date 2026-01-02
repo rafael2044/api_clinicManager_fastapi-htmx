@@ -1,112 +1,117 @@
-<div class="bg-white shadow-md rounded-lg overflow-hidden p-6">
+<div class="card shadow-sm border-0 animate-fade-in">
     {% if success %}
-    <div
-        class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-4"
-    >
-    {{ success }}
+    <div class="alert alert-success alert-dismissible fade show m-3 d-flex align-items-center" role="alert">
+        <i class="bi bi-check-circle-fill me-2"></i>
+        <div>{{ success }}</div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
-    {% endif %} {% if error %}
-    <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4">
-        {{ error }}
+    {% endif %}
+    
+    {% if error %}
+    <div class="alert alert-danger alert-dismissible fade show m-3 d-flex align-items-center" role="alert">
+        <i class="bi bi-exclamation-octagon-fill me-2"></i>
+        <div>{{ error }}</div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
     {% endif %}
 
-    <div class="p-4 flex justify-between items-center border-b">
-        <h2 class="text-xl font-bold">Pacientes Cadastrados</h2>
+    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
+        <h2 class="h5 fw-bold mb-0 text-dark">
+            <i class="bi bi-people me-2 text-primary"></i>Pacientes Cadastrados
+        </h2>
         <button
             hx-get="/patients/new"
             hx-target="#main-content"
             hx-push-url="true"
-            class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+            class="btn btn-primary d-flex align-items-center gap-2 shadow-sm"
         >
-            + Novo Paciente
+            <i class="bi bi-person-plus-fill"></i>
+            <span>Novo Paciente</span>
         </button>
     </div>
 
-    <table class="min-w-full divide-y divide-gray-200">
-        <thead class="bg-gray-50">
-            <tr>
-                <th
-                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"
-                >
-                    Nome
-                </th>
-                <th
-                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"
-                >
-                    CPF
-                </th>
-                <th
-                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"
-                >
-                    Contacto
-                </th>
-                <th
-                    class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase"
-                >
-                    Ações
-                </th>
-            </tr>
-        </thead>
-        <tbody class="bg-white divide-y divide-gray-200">
-            {% for p in patients %}
-            <tr>
-                <td class="px-6 py-4 whitespace-nowrap">{{ p.name }}</td>
-                <td class="px-6 py-4 whitespace-nowrap">{{ p.cpf }}</td>
-                <td class="px-6 py-4 whitespace-nowrap">{{ p.contact }}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-right space-x-2">
-                    <button
-                        hx-get="/patients/edit/{{ p.id }}"
-                        hx-target="#main-content"
-                        hx-push-url="true"
-                        class="text-white bg-blue-600 box-border border rounded px-4 py-2 hover:bg-blue-700"
-                    >
-                        Editar
-                    </button>
-                    <button
-                        hx-delete="/patients/{{ p.id }}"
-                        hx-confirm="Tem certeza?"
-                        hx-target="#main-content"
-                        class="text-white bg-red-600 box-border border rounded px-4 py-2 hover:bg-red-700"
-                    >
-                        Excluir
-                    </button>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    <div class="flex items-center justify-between mt-6 border-t pt-4">
-        <div class="text-sm text-gray-700">
-            Página <span class="font-semibold">{{ current_page }}</span> de <span class="font-semibold">{{ total_pages }}</span>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th class="px-4 py-3 text-secondary small fw-bold text-uppercase">Nome</th>
+                    <th class="px-4 py-3 text-secondary small fw-bold text-uppercase">CPF</th>
+                    <th class="px-4 py-3 text-secondary small fw-bold text-uppercase">Contacto</th>
+                    <th class="px-4 py-3 text-secondary small fw-bold text-uppercase text-end">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in patients %}
+                <tr>
+                    <td class="px-4 py-3 fw-medium text-dark">{{ p.name }}</td>
+                    <td class="px-4 py-3 text-muted">{{ p.cpf }}</td>
+                    <td class="px-4 py-3 text-muted">
+                        <i class="bi bi-whatsapp text-success me-1 small"></i>{{ p.contact }}
+                    </td>
+                    <td class="px-4 py-3 text-end">
+                        <div class="btn-group shadow-sm" role="group">
+                            <button
+                                hx-get="/patients/edit/{{ p.id }}"
+                                hx-target="#main-content"
+                                hx-push-url="true"
+                                class="btn btn-outline-primary btn-sm d-inline-flex align-items-center gap-1"
+                                title="Editar Paciente"
+                            >
+                                <i class="bi bi-pencil"></i> Editar
+                            </button>
+                            <button
+                                hx-delete="/patients/{{ p.id }}"
+                                hx-confirm="Tem certeza que deseja excluir o paciente {{ p.name }}?"
+                                hx-target="#main-content"
+                                class="btn btn-outline-danger btn-sm d-inline-flex align-items-center gap-1"
+                                title="Excluir Paciente"
+                            >
+                                <i class="bi bi-trash"></i> Excluir
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="4" class="text-center py-5 text-muted italic">
+                        <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+                        Nenhum paciente encontrado.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="card-footer bg-white py-3 d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+        <div class="text-muted small">
+            Exibindo página <span class="fw-bold text-dark">{{ current_page }}</span> de <span class="fw-bold text-dark">{{ total_pages }}</span>
         </div>
         
-        <div class="flex space-x-2">
-            {% if has_prev %}
-            <button hx-get="/patients?page={{ current_page - 1 }}"
-                    hx-target="#main-content"
-                    hx-push-url="true"
-                    class="px-4 py-2 border rounded text-sm font-medium hover:bg-gray-50 transition">
-                Anterior
-            </button>
-            {% else %}
-            <button disabled class="px-4 py-2 border rounded text-sm font-medium text-gray-300 cursor-not-allowed">
-                Anterior
-            </button>
-            {% endif %}
-
-            {% if has_next %}
-            <button hx-get="/patients?page={{ current_page + 1 }}"
-                    hx-target="#main-content"
-                    hx-push-url="true"
-                    class="px-4 py-2 border rounded text-sm font-medium hover:bg-gray-50 transition">
-                Próximo
-            </button>
-            {% else %}
-            <button disabled class="px-4 py-2 border rounded text-sm font-medium text-gray-300 cursor-not-allowed">
-                Próximo
-            </button>
-            {% endif %}
-        </div>
+        <nav aria-label="Navegação de pacientes">
+            <ul class="pagination pagination-sm mb-0">
+                <li class="page-item {{ 'disabled' if not has_prev }}">
+                    <button class="page-link d-flex align-items-center" 
+                            {% if has_prev %}
+                            hx-get="/patients?page={{ current_page - 1 }}"
+                            hx-target="#main-content"
+                            hx-push-url="true"
+                            {% endif %}>
+                        <i class="bi bi-chevron-left me-1"></i> Anterior
+                    </button>
+                </li>
+                
+                <li class="page-item {{ 'disabled' if not has_next }}">
+                    <button class="page-link d-flex align-items-center"
+                            {% if has_next %}
+                            hx-get="/patients?page={{ current_page + 1 }}"
+                            hx-target="#main-content"
+                            hx-push-url="true"
+                            {% endif %}>
+                        Próximo <i class="bi bi-chevron-right ms-1"></i>
+                    </button>
+                </li>
+            </ul>
+        </nav>
     </div>
 </div>

@@ -1,41 +1,82 @@
-<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-    <div class="bg-white p-6 rounded-lg shadow-md border-t-4 border-blue-500">
-        <h2 class="text-xl font-semibold mb-4">Ações Rápidas</h2>
-        <div class="flex flex-col space-y-2">
-            <button
-                hx-get="/patients/form"
-                hx-target="#main-content"
-                class="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600"
-            >
-                Cadastrar Novo Paciente
-            </button>
-            <button
-                hx-get="/agenda/novo"
-                hx-target="#main-content"
-                class="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600"
-            >
-                Agendar Consulta
-            </button>
+<div class="row g-4 animate-fade-in">
+    <div class="col-12 col-md-4">
+        <div class="card shadow-sm border-0 border-top border-primary border-4 h-100">
+            <div class="card-body p-4">
+                <h2 class="h5 fw-bold mb-4 d-flex align-items-center">
+                    <i class="bi bi-lightning-charge-fill text-warning me-2"></i>
+                    Ações Rápidas
+                </h2>
+                <div class="d-grid gap-3">
+                    <button
+                        hx-get="/patients/new"
+                        hx-target="#main-content"
+                        hx-push-url="true"
+                        class="btn btn-primary d-flex align-items-center justify-content-center py-2 fw-medium shadow-sm"
+                    >
+                        <i class="bi bi-person-plus-fill me-2"></i>
+                        Novo Paciente
+                    </button>
+                    
+                    <button
+                        hx-get="/appointments/new"
+                        hx-target="#main-content"
+                        hx-push-url="true"
+                        class="btn btn-success d-flex align-items-center justify-content-center py-2 fw-medium shadow-sm"
+                    >
+                        <i class="bi bi-calendar-plus me-2"></i>
+                        Agendar Consulta
+                    </button>
+
+                    <button
+                        hx-get="/employees"
+                        hx-target="#main-content"
+                        hx-push-url="true"
+                        class="btn btn-outline-dark d-flex align-items-center justify-content-center py-2"
+                    >
+                        <i class="bi bi-people me-2"></i>
+                        Ver Corpo Clínico
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
-    <div class="bg-white p-6 rounded-lg shadow-md md:col-span-2">
-        <h2 class="text-xl font-semibold mb-4 text-gray-700">Agenda de Hoje</h2>
-
-        <div hx-get="/agenda/hoje" hx-trigger="load">
-            <p class="text-gray-500 italic">Buscando agendamentos...</p>
+    <div class="col-12 col-md-8">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-white py-3 border-bottom d-flex align-items-center justify-content-between">
+                <h2 class="h5 fw-bold mb-0 text-dark">
+                    <i class="bi bi-clock-history me-2 text-primary"></i>
+                    Agenda de Hoje
+                </h2>
+                <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-2">
+                    {{ now.strftime('%d/%m/%Y') if now else 'Hoje' }}
+                </span>
+            </div>
+            
+            <div class="card-body p-4">
+                <div hx-get="/appointments/list?today=true" hx-trigger="load">
+                    <div class="text-center py-5">
+                        <div class="spinner-border text-primary mb-3" role="status">
+                            <span class="visually-hidden">Carregando...</span>
+                        </div>
+                        <p class="text-muted fw-light">Sincronizando agendamentos...</p>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
-<div class="mt-8 bg-blue-50 border-l-4 border-blue-400 p-4">
-    <div class="flex">
-        <div class="ml-3">
-            <p class="text-sm text-blue-700">
-                Bem-vindo ao ClinicManager. Você tem
-                <span class="font-bold">5 consultas</span> confirmadas para o
-                período da tarde.
-            </p>
+<div class="row g-3 mt-4">
+    <div class="col-md-4">
+        <div class="p-3 bg-white border rounded shadow-sm d-flex align-items-center">
+            <div class="bg-primary bg-opacity-10 p-3 rounded-circle me-3">
+                <i class="bi bi-heart-pulse text-primary fs-4"></i>
+            </div>
+            <div>
+                <small class="text-muted d-block">Consultas Hoje</small>
+                <span class="h4 fw-bold mb-0">--</span>
+            </div>
         </div>
     </div>
-</div>
+    </div>

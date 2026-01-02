@@ -1,25 +1,32 @@
-<div class="bg-blue-50 p-4 rounded-lg border border-blue-100 grid grid-cols-1 md:grid-cols-2 gap-6 animate-fade-in">
+<div class="p-4 rounded border bg-light animate-fade-in" style="border-color: #cfe2ff !important; background-color: #f0f7ff !important;">
     <input type="hidden" name="role" value="doctor">
-    <div>
-        <label class="block text-sm font-medium text-blue-800 mb-1">CRM (com UF)</label>
-        <input type="text" name="crm" id="input-crm" required value="{{ employee.crm if employee else '' }}"
-               class="w-full rounded-md border-blue-200 border p-2 focus:ring-2 focus:ring-blue-500 outline-none bg-white">
-    </div>
-    <div>
-        <label class="block text-sm font-medium text-blue-800 mb-1">Especialidade</label>
-        <div class="flex gap-2">
-            <select name="specialty_id" required class="flex-1 rounded-md border-blue-200 border p-2 bg-white">
-                <option value="">Selecione...</option>
-                {% for spec in specialties %}
-                <option value="{{ spec.id }}" {{ 'selected' if employee and employee.specialty_id == spec.id }}>
-                    {{ spec.name }}
-                </option>
-                {% endfor %}
-            </select>
-            <button type="button" hx-get="/specialties/manage" hx-target="#main-content" hx-push-url="true"
-                    class="bg-white hover:bg-blue-100 text-blue-600 p-2 rounded-md border border-blue-200">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37a1.724 1.724 0 002.572-1.065z"></path></svg>
-            </button>
+    <div class="row g-3">
+        <div class="col-md-6">
+            <label class="form-label small fw-bold text-primary">CRM (com UF)</label>
+            <input type="text" name="crm" id="input-crm" required 
+                   value="{{ employee.crm if employee else '' }}"
+                   class="form-control border-primary-subtle shadow-none">
+        </div>
+        
+        <div class="col-md-6">
+            <label class="form-label small fw-bold text-primary">Especialidade</label>
+            <div class="d-flex gap-2">
+                <select name="specialty_id" required class="form-select border-primary-subtle shadow-none">
+                    <option value="">Selecione...</option>
+                    {% for spec in specialties %}
+                    <option value="{{ spec.id }}" {{ 'selected' if employee and employee.specialty_id == spec.id }}>
+                        {{ spec.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+                <button type="button" hx-get="/specialties/manage" hx-target="#main-content" hx-push-url="true"
+                        class="btn btn-outline-primary shadow-sm d-flex align-items-center justify-content-center px-3">
+                    <svg class="bi bi-gear" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492zM5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0z"/>
+                        <path d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.893 3.434-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.893-1.64-.902-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52l-.094-.319zm-2.633.283c.246-.835 1.428-.835 1.674 0l.094.319a1.873 1.873 0 0 0 2.693 1.115l.291-.16c.764-.415 1.585.405 1.17 1.17l-.16.292a1.873 1.873 0 0 0 1.115 2.692l.319.094c.835.246.835 1.428 0 1.674l-.319.094a1.873 1.873 0 0 0-1.115 2.693l.16.291c.415.764-.406 1.585-1.17 1.17l-.291-.16a1.873 1.873 0 0 0-2.692 1.115l-.094.319c-.246.835-1.428.835-1.674 0l-.094-.319a1.873 1.873 0 0 0-2.693-1.115l-.291.16c-.764.415-1.585-.406-1.17-1.17l.16-.292a1.873 1.873 0 0 0-1.115-2.692l-.319-.094c-.835-.246-.835-1.428 0-1.674l.319-.094a1.873 1.873 0 0 0 1.115-2.693l-.16-.291c-.415-.764.406-1.585 1.17-1.17l.291.16a1.873 1.873 0 0 0 2.692-1.115l.094-.319z"/>
+                    </svg>
+                </button>
+            </div>
         </div>
     </div>
 </div>
@@ -28,10 +35,12 @@
     (function () {
         if (typeof IMask !== "undefined") {
             const inputCrm = document.getElementById("input-crm");
-            const maskCrm = {
-                mask: "0000000",
-            };
-            IMask(inputCrm, maskCrm);
+            if (inputCrm) {
+                const maskCrm = {
+                    mask: "0000000",
+                };
+                IMask(inputCrm, maskCrm);
+            }
         }
     })();
 </script>

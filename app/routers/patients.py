@@ -1,7 +1,7 @@
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, Form, Request
-from fastapi.responses import HTMLResponse
+from fastapi import APIRouter, Depends, Form, Request, Response
+from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.orm import Session
 
 from app.deps import templates
@@ -9,6 +9,8 @@ from app.models import Patient
 from app.schemas import PatientResponse, PatientCreate
 
 from app.deps import get_db, RoleChecker
+
+SIZE = 5
 
 router = APIRouter(prefix="/patients", tags=["Patients"])
 
@@ -19,7 +21,8 @@ async def list_complete_patients(
     request: Request,
     db: Session = Depends(get_db),
     page: int = 1,
-    size:int = 5):
+    size:int = SIZE,
+    success: str = ''):
     offset = (page - 1) * size
     total_count = db.query(Patient).count()
     patients = db.query(Patient).offset(offset).limit(size).all()
@@ -41,6 +44,7 @@ async def list_complete_patients(
             "total_pages": total_pages,
             "has_next": page < total_pages,
             "has_prev": page > 1,
+            "success": success
         }
     )
 
@@ -128,19 +132,17 @@ async def salvar_paciente(
         db.add(patient)
         db.commit()
 
-        # Após salvar, redirecionamos para a lista de pacientes usando HTMX
-        patients = db.query(Patient).all()
-        result = [PatientResponse.model_validate(p) for p in patients]
-        return templates.TemplateResponse(
-            "patients/list_fragment.html",
-            {
-                "request": request,
-                "patients": result,
-                "success": "Paciente cadastrado com sucesso!",
-            },
+        response = await list_complete_patients(
+            request,
+            db,
+            success= f"O Paciente {patient.name} cadastrado."
         )
+
+        response.headers['HX-Push-Url']='/patients'
+        return response
     except Exception as e:
         db.rollback()
+        print(e)
         return templates.TemplateResponse(
             "patients/form_fragment.html",
             {
@@ -193,17 +195,16 @@ async def edit_patient(
             db_patient.address = patient_update.address
 
             db.commit()
-
-            patients = db.query(Patient).all()
-            result = [PatientResponse.model_validate(p) for p in patients]
-            return templates.TemplateResponse(
-                "patients/list_fragment.html",
-                {
-                    "request": request,
-                    "patients": result,
-                    "success": "Paciente Atualizado com sucesso!",
-                },
+            response = await list_complete_patients(
+                request,
+                db,
+                success=f"O Paciente {patient_update.name} foi atualizado."
             )
+            response.headers['HX-Push-Url']='/patients'
+
+            return response
+
+            
         return templates.TemplateResponse(
             "patients/notfound_error.html",
             {
@@ -232,16 +233,10 @@ async def delete_patient(
     if db_patient:
         db.delete(db_patient)
         db.commit()
-        patients = db.query(Patient).all()
-        result = [PatientResponse.model_validate(p) for p in patients]
-
-        return templates.TemplateResponse(
-            "patients/list_fragment.html",
-            {
-                "request": request,
-                "patients": result,
-                "success": "Paciente Excluido com sucesso!",
-            },
+        return await list_complete_patients(
+            request,
+            db,
+            success=f"O paciente {db_patient.name} foi excluido."
         )
     return templates.TemplateResponse(
         "components/notfound_error.html",

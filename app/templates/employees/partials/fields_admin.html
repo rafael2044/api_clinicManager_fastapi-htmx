@@ -1,15 +1,17 @@
-<div class="bg-purple-50 p-4 rounded-lg border border-purple-100 grid grid-cols-1 md:grid-cols-2 gap-6 animate-fade-in">
-    <div>
-        <label class="block text-sm font-medium text-purple-800 mb-1">Função / Cargo</label>
-        <select name="role" class="w-full rounded-md border-purple-200 border p-2 bg-white">
-            <option value="receptionist" {{ 'selected' if employee and employee.role == 'receptionist' }}>Recepcionista</option>
-            <option value="admin" {{ 'selected' if employee and employee.role == 'admin' }}>Administrativo</option>
-        </select>
-    </div>
-    <div>
-        <label class="block text-sm font-medium text-purple-800 mb-1">Departamento</label>
-        <input type="text" name="department" placeholder="Ex: Recepção Central" 
-               value="{{ employee.department if employee else '' }}"
-               class="w-full rounded-md border-purple-200 border p-2 focus:ring-2 focus:ring-purple-500 outline-none bg-white">
+<div class="p-4 rounded border animate-fade-in" style="background-color: #f5f3ff; border-color: #ddd6fe !important;">
+    <div class="row g-3">
+        <div class="col-md-6">
+            <label class="form-label small fw-bold" style="color: #5b21b6;">Função / Cargo</label>
+            <select name="role" class="form-select border-medium">
+                <option value="receptionist" {{ 'selected' if employee and employee.role == 'receptionist' }}>Recepcionista</option>
+                <option value="admin" {{ 'selected' if employee and employee.role == 'admin' }}>Administrativo</option>
+            </select>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label small fw-bold" style="color: #5b21b6;">Departamento</label>
+            <input type="text" name="department" placeholder="Ex: Recepção Central" 
+                   value="{{ employee.department if employee else '' }}"
+                   class="form-control border-medium shadow-none">
+        </div>
     </div>
 </div>

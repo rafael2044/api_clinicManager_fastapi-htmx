@@ -1,22 +1,25 @@
 {% for spec in specialties %}
-<tr class="border-b hover:bg-gray-50" id="spec-{{ spec.id }}">
-    <td class="py-2 px-4">{{ spec.name }}</td>
-    <td class="py-2 px-4 text-right">
+<tr id="spec-{{ spec.id }}" class="align-middle">
+    <td class="px-4 py-2 text-dark fw-medium">
+        <i class="bi bi-tag-fill me-2 text-secondary small"></i>{{ spec.name }}
+    </td>
+    <td class="px-4 py-2 text-end">
         <button
             hx-delete="/specialties/delete/{{ spec.id }}"
             hx-target="#specialty-table-body"
             hx-swap="innerHTML"
-            hx-confirm="Excluir especialidade?"
-            class="text-red-500 hover:text-red-700"
+            hx-confirm="Deseja excluir a especialidade '{{ spec.name }}'?"
+            class="btn btn-outline-danger btn-sm border-0 rounded-circle"
+            title="Excluir"
         >
-            &times;
+            <i class="bi bi-trash3"></i>
         </button>
     </td>
 </tr>
 {% else %}
 <tr>
-    <td colspan="2" class="py-4 text-center text-gray-500 italic">
-        Nenhuma especialidade cadastrada.
+    <td colspan="2" class="py-4 text-center text-muted fw-light italic">
+        <i class="bi bi-info-circle me-1"></i> Nenhuma especialidade cadastrada.
     </td>
 </tr>
 {% endfor %}

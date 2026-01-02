@@ -1,45 +1,74 @@
-<div class="bg-white shadow-md rounded-lg p-6 animate-fade-in">
-    <div class="flex justify-between items-center mb-6">
-        <h2 class="text-2xl font-bold text-gray-800">Agenda Clínica</h2>
+<div class="card shadow-sm border-0 animate-fade-in">
+    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
+        <h2 class="h5 fw-bold mb-0 text-dark">
+            <i class="bi bi-calendar-check me-2 text-primary"></i>Agenda Clínica
+        </h2>
         <button hx-get="/appointments/new" hx-target="#main-content" hx-push-url="true"
-                class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-            + Novo Agendamento
+                class="btn btn-primary d-flex align-items-center gap-2 shadow-sm">
+            <i class="bi bi-plus-circle"></i>
+            <span>Novo Agendamento</span>
         </button>
     </div>
 
-    <table class="min-w-full divide-y divide-gray-200">
-        <thead class="bg-gray-50">
-            <tr>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Data/Hora</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Paciente</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Médico</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Valor</th>
-                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Status</th>
-            </tr>
-        </thead>
-        <tbody class="divide-y divide-gray-200">
-            {% for app in appointments %}
-            <tr class="hover:bg-gray-50">
-                <td class="px-6 py-4 text-sm font-semibold text-blue-700">
-                    {{ app.date.replace('T', ' ') }}
-                </td>
-                <td class="px-6 py-4 text-sm text-gray-900">{{ app.patient.name }}</td>
-                <td class="px-6 py-4 text-sm text-gray-600">Dr(a). {{ app.doctor.name }}</td>
-                <td class="px-6 py-4 text-sm text-gray-600">R$ {{ "%.2f"|format(app.cost) }}</td>
-                <td class="px-6 py-4 text-center">
-                    {% set status_map = {
-                        'scheduled': 'bg-blue-100 text-blue-800',
-                        'waiting': 'bg-yellow-100 text-yellow-800',
-                        'in_progress': 'bg-purple-100 text-purple-800',
-                        'completed': 'bg-green-100 text-green-800',
-                        'canceled': 'bg-red-100 text-red-800'
-                    } %}
-                    <span class="px-3 py-1 rounded-full text-xs font-bold {{ status_map.get(app.status, 'bg-gray-100') }}">
-                        {{ app.status|upper }}
-                    </span>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th class="px-4 py-3 text-secondary small fw-bold text-uppercase">Data / Hora</th>
+                    <th class="px-4 py-3 text-secondary small fw-bold text-uppercase">Paciente</th>
+                    <th class="px-4 py-3 text-secondary small fw-bold text-uppercase">Médico</th>
+                    <th class="px-4 py-3 text-secondary small fw-bold text-uppercase">Valor</th>
+                    <th class="px-4 py-3 text-center text-secondary small fw-bold text-uppercase">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for app in appointments %}
+                <tr>
+                    <td class="px-4 py-3">
+                        <div class="d-flex align-items-center text-primary fw-bold">
+                            <i class="bi bi-clock me-2 small"></i>
+                            {{ app.date.replace('T', ' ') }}
+                        </div>
+                    </td>
+                    <td class="px-4 py-3">
+                        <div class="fw-medium text-dark">{{ app.patient.name }}</div>
+                    </td>
+                    <td class="px-4 py-3 text-muted">
+                        <span class="small text-uppercase fw-semibold">Dr(a).</span> {{ app.doctor.name }}
+                    </td>
+                    <td class="px-4 py-3">
+                        <span class="text-dark fw-medium">R$ {{ "%.2f"|format(app.cost) }}</span>
+                    </td>
+                    <td class="px-4 py-3 text-center">
+                        {% set status_styles = {
+                            'scheduled': 'bg-info-subtle text-info border-info-subtle',
+                            'waiting': 'bg-warning-subtle text-warning-emphasis border-warning-subtle',
+                            'in_progress': 'bg-primary-subtle text-primary border-primary-subtle',
+                            'completed': 'bg-success-subtle text-success border-success-subtle',
+                            'canceled': 'bg-danger-subtle text-danger border-danger-subtle'
+                        } %}
+                        {% set status_icons = {
+                            'scheduled': 'bi-calendar-event',
+                            'waiting': 'bi-person-walking',
+                            'in_progress': 'bi-stethoscope',
+                            'completed': 'bi-check-all',
+                            'canceled': 'bi-x-circle'
+                        } %}
+                        <span class="badge border px-3 py-2 rounded-pill d-inline-flex align-items-center gap-1 {{ status_styles.get(app.status, 'bg-light text-dark') }}" style="font-size: 0.7rem;">
+                            <i class="bi {{ status_icons.get(app.status, 'bi-question-circle') }}"></i>
+                            {{ app.status|upper }}
+                        </span>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" class="text-center py-5 text-muted">
+                        <i class="bi bi-calendar-x fs-2 d-block mb-2"></i>
+                        Nenhum agendamento para o período selecionado.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>

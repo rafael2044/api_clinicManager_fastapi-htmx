@@ -1,62 +1,68 @@
-<div class="bg-white p-6 rounded-lg shadow-md border border-gray-100 max-w-4xl mx-auto">
+<div class="container-fluid bg-white rounded shadow-sm border p-4 animate-fade-in">
     {% if success %}
-        <div
-            class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-4">
-            {{ success }}
+        <div class="alert alert-success alert-dismissible fade show d-flex align-items-center" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>
+            <div>{{ success }}</div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     {% endif %}
-    {% if error %}
-        <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4">
-            {{ error }}
-        </div>
-    {% endif %}
-    <h2 class="text-xl font-bold mb-6 text-gray-800 border-b pb-2">
+
+    <h2 class="h4 fw-bold mb-4 text-dark border-bottom pb-2 d-flex align-items-center">
+        <i class="bi {{ 'bi-pencil-square' if employee else 'bi-person-plus-fill' }} me-2 text-primary"></i>
         {{ "Editar Funcionário" if employee else "Novo Funcionário" }}
     </h2>
+
     {% if not (employee and employee.id) %}
-        <div class="flex bg-gray-100 p-1 rounded-lg mb-6 w-fit">
+        <div class="d-inline-flex bg-light p-1 rounded mb-4 shadow-sm border">
             <button type="button" 
                     hx-get="/employees/render-fields?role=doctor" 
                     hx-target="#dynamic-form-section"
-                    class="nav-tab flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all bg-white text-blue-600 shadow-sm"
+                    class="btn btn-white shadow-sm d-flex align-items-center gap-2 text-primary fw-medium px-4 py-2"
                     id="btn-doctor">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
-                Corpo Clínico (Médico)
+                <i class="bi bi-hospital"></i>
+                Corpo Clínico
             </button>
             <button type="button" 
                     hx-get="/employees/render-fields?role=admin" 
                     hx-target="#dynamic-form-section"
-                    class="nav-tab flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all text-gray-500 hover:text-gray-700"
+                    class="btn text-secondary d-flex align-items-center gap-2 px-4 py-2"
                     id="btn-admin">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-                Administrativo / Outros
+                <i class="bi bi-briefcase"></i>
+                Administrativo
             </button>
         </div>
     {% endif %}
 
-    <form 
-        hx-post="{{'/employees/save?employee_id=' + (employee.id|string) if employee and employee.id else '/employees/save'}}"
-        hx-target="#main-content" class="space-y-5">
-        <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Nome Completo</label>
-            <input type="text" name="name" required value="{{ employee.name if employee else '' }}"
-                   class="w-full rounded-md border-gray-300 border p-2 focus:ring-2 focus:ring-blue-500 outline-none">
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">CPF</label>
-                <input type="text" name="cpf" id="input-cpf" placeholder="000.000.000-00" required value="{{ employee.cpf if employee else '' }}"
-                       class="w-full rounded-md border-gray-300 border p-2 focus:ring-2 focus:ring-blue-500 outline-none">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Data de Nascimento</label>
-                <input type="date" name="birth_date" required value="{{ employee.birth_date if employee else '' }}"
-                       class="w-full rounded-md border-gray-300 border p-2 focus:ring-2 focus:ring-blue-500 outline-none">
+    <form hx-post="{{'/employees/save?employee_id=' + (employee.id|string) if employee and employee.id else '/employees/save'}}"
+          hx-target="#main-content" hx-push-url="/employees">
+        
+        <div class="mb-3">
+            <label class="form-label fw-semibold text-secondary small">Nome Completo</label>
+            <div class="input-group">
+                <span class="input-group-text bg-white"><i class="bi bi-person text-muted"></i></span>
+                <input type="text" name="name" required value="{{ employee.name if employee else '' }}" class="form-control">
             </div>
         </div>
 
-        <div id="dynamic-form-section">
+        <div class="row g-3 mb-4">
+            <div class="col-md-6">
+                <label class="form-label fw-semibold text-secondary small">CPF</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-white"><i class="bi bi-card-text text-muted"></i></span>
+                    <input type="text" name="cpf" id="input-cpf" placeholder="000.000.000-00" required 
+                           value="{{ employee.cpf if employee else '' }}" class="form-control">
+                </div>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-semibold text-secondary small">Data de Nascimento</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-white"><i class="bi bi-calendar-event text-muted"></i></span>
+                    <input type="date" name="birth_date" required value="{{ employee.birth_date if employee else '' }}" class="form-control">
+                </div>
+            </div>
+        </div>
+
+        <div id="dynamic-form-section" class="p-3 rounded border border-secondary border-opacity-25 mb-4 shadow-sm">
             {% if employee %}
                 {% if employee.role == "doctor" %}
                     {% include "employees/partials/fields_medical.html" %}
@@ -68,14 +74,14 @@
             {% endif %}
         </div>
 
-        <div class="flex justify-end gap-3 pt-4 border-t mt-4">
+        <div class="d-flex justify-content-end gap-2 pt-3 border-top mt-4">
             <button type="button" hx-get="/employees" hx-target="#main-content" hx-push-url="true"
-                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                    class="btn btn-light border px-4">
                 Cancelar
             </button>
-            <button type="submit" id="submit-btn"
-                    class="px-4 py-2 text-sm font-medium text-white rounded-md shadow-sm bg-blue-600 hover:bg-blue-700">
-                {{ 'Salvar Funcionário' if employee and employee.id else 'Cadastrar Funcionário'}}
+            <button type="submit" id="submit-btn" class="btn btn-primary px-4 d-flex align-items-center gap-2">
+                <i class="bi bi-cloud-arrow-up"></i>
+                {{ 'Salvar Alterações' if employee and employee.id else 'Cadastrar Funcionário'}}
             </button>
         </div>
     </form>

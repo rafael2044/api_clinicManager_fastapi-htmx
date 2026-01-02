@@ -1,68 +1,99 @@
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in">
-    <div class="lg:col-span-1 bg-white p-6 rounded-lg shadow-sm border h-fit">
-        <h3 class="text-lg font-bold mb-4 text-gray-700">Criar Acesso</h3>
-        <form hx-post="/users/save" hx-target="#main-content" class="space-y-4">
-            <div>
-                <label class="block text-sm font-medium">Funcionário</label>
-                <select name="employee_id" required class="w-full border p-2 rounded mt-1">
-                    <option value="">Selecione um funcionário...</option>
-                    {% for emp in employees %}
-                    <option value="{{ emp.id }}">{{ emp.name }} ({{ emp.role }})</option>
-                    {% endfor %}
-                </select>
+<div class="row g-4 animate-fade-in">
+    <div class="col-12 col-lg-4">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-white py-3 border-bottom">
+                <h3 class="h6 fw-bold mb-0 text-dark text-uppercase tracking-wider">
+                    <i class="bi bi-person-plus-fill me-2 text-primary"></i>Criar Acesso
+                </h3>
             </div>
-            <div>
-                <label class="block text-sm font-medium">Usuário (Login)</label>
-                <input type="text" name="username" required class="w-full border p-2 rounded mt-1">
+            <div class="card-body p-4">
+                <form hx-post="/users/save" hx-target="#main-content" class="needs-validation">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-secondary">Funcionário</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light"><i class="bi bi-person-badge"></i></span>
+                            <select name="employee_id" required class="form-select">
+                                <option value="">Selecione um funcionário...</option>
+                                {% for emp in employees %}
+                                <option value="{{ emp.id }}">{{ emp.name }} ({{ emp.role }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-secondary">Usuário (Login)</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light"><i class="bi bi-at"></i></span>
+                            <input type="text" name="username" required class="form-control" placeholder="Ex: joao.silva">
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold text-secondary">Senha</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light"><i class="bi bi-key"></i></span>
+                            <input type="password" name="password" required class="form-control" placeholder="******">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 fw-bold py-2 shadow-sm d-flex align-items-center justify-content-center gap-2">
+                        <i class="bi bi-shield-check"></i>
+                        Criar Conta
+                    </button>
+                </form>
             </div>
-            <div>
-                <label class="block text-sm font-medium">Senha</label>
-                <input type="password" name="password" required class="w-full border p-2 rounded mt-1">
-            </div>
-            <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded font-bold hover:bg-blue-700">
-                Criar Conta
-            </button>
-        </form>
+        </div>
     </div>
 
-    <div class="lg:col-span-2 bg-white p-6 rounded-lg shadow-sm border">
-        <h3 class="text-lg font-bold mb-4 text-gray-700">Usuários de Sistema</h3>
-        <table class="w-full">
-            <thead class="bg-gray-50 border-b">
-                <tr>
-                    <th class="text-left p-3 text-sm font-semibold">Username</th>
-                    <th class="text-left p-3 text-sm font-semibold">Funcionário</th>
-                    <th class="text-center p-3 text-sm font-semibold">Status</th>
-                    <th class="text-right p-3 text-sm font-semibold">Ação</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for user in users %}
-                <tr class="border-b hover:bg-gray-50">
-                    <td class="p-3 text-sm">{{ user.username }}</td>
-                    <td class="p-3 text-sm">{{ user.employee.name }}</td>
-                    <td class="p-3 text-center" id="status-user-{{ user.id }}">
-                        {% include "users/partials/status_badge.html" %}
-                    </td>
-                    <td class="p-3 text-right">
-                        <button hx-get="/users/change-password-form/{{ user.id }}" 
-                                hx-target="#modal-slot"
-                                class="p-1 text-gray-500 hover:text-blue-600 border rounded hover:border-blue-600 transition"
-                                title="Alterar Senha">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                            </svg>
-                        </button>
-                        <button hx-post="/users/toggle-status/{{ user.id }}" 
-                                hx-target="#status-user-{{ user.id }}"
-                                class="text-xs font-medium px-3 py-1 rounded border border-gray-300 hover:bg-gray-100">
-                            Alternar
-                        </button>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <div class="col-12 col-lg-8">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white py-3 border-bottom">
+                <h3 class="h6 fw-bold mb-0 text-dark text-uppercase tracking-wider">
+                    <i class="bi bi-shield-lock me-2 text-primary"></i>Usuários de Sistema
+                </h3>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="px-4 py-3 text-secondary small fw-bold text-uppercase">Username</th>
+                            <th class="px-4 py-3 text-secondary small fw-bold text-uppercase">Funcionário</th>
+                            <th class="px-4 py-3 text-secondary small fw-bold text-uppercase text-center">Status</th>
+                            <th class="px-4 py-3 text-secondary small fw-bold text-uppercase text-end">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                        <tr class="border-bottom">
+                            <td class="px-4 py-3">
+                                <span class="fw-medium text-dark">{{ user.username }}</span>
+                            </td>
+                            <td class="px-4 py-3 text-muted small">{{ user.employee.name }}</td>
+                            <td class="px-4 py-3 text-center" id="status-user-{{ user.id }}">
+                                {% include "users/partials/status_badge.html" %}
+                            </td>
+                            <td class="px-4 py-3 text-end">
+                                <div class="btn-group" role="group">
+                                    <button hx-get="/users/change-password-form/{{ user.id }}" 
+                                            hx-target="#modal-slot"
+                                            class="btn btn-outline-secondary btn-sm"
+                                            title="Alterar Senha">
+                                        <i class="bi bi-key-fill"></i>
+                                    </button>
+                                    <button hx-post="/users/toggle-status/{{ user.id }}" 
+                                            hx-target="#status-user-{{ user.id }}"
+                                            class="btn btn-outline-primary btn-sm px-3">
+                                        Alternar Status
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
         <div id="modal-slot"></div>
     </div>
 </div>

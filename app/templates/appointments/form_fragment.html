@@ -1,53 +1,63 @@
-<div class="max-w-3xl mx-auto bg-white p-8 rounded-xl shadow-lg border border-gray-100 animate-fade-in">
-    <h2 class="text-2xl font-bold mb-6 text-gray-800">Agendar Consulta</h2>
-
-    <form hx-post="/appointments/save" hx-target="#main-content" class="space-y-5">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Paciente</label>
-                <select name="patient_id" required class="w-full border-gray-300 border p-2 rounded-md focus:ring-2 focus:ring-blue-500 outline-none">
-                    <option value="">Selecione o paciente...</option>
-                    {% for p in patients %}
-                    <option value="{{ p.id }}">{{ p.name }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Médico</label>
-                <select name="doctor_id" required class="w-full border-gray-300 border p-2 rounded-md focus:ring-2 focus:ring-blue-500 outline-none">
-                    <option value="">Selecione o médico...</option>
-                    {% for d in doctors %}
-                    <option value="{{ d.id }}">Dr(a). {{ d.name }}</option>
-                    {% endfor %}
-                </select>
-            </div>
+<div class="container py-4">
+    <div class="card shadow-sm mx-auto" style="max-width: 800px;">
+        <div class="card-header bg-white py-3">
+            <h2 class="h4 mb-0 fw-bold text-dark">Agendar Consulta</h2>
         </div>
+        
+        <div class="card-body p-4">
+            <form hx-post="/appointments/save" hx-target="#main-content" hx-push-url="/appointments/list">
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label fw-medium text-secondary">Paciente</label>
+                        <select name="patient_id" required class="form-select">
+                            <option value="">Selecione o paciente...</option>
+                            {% for p in patients %}
+                            <option value="{{ p.id }}">{{ p.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Data e Hora</label>
-                <input type="datetime-local" name="date" required 
-                       class="w-full border-gray-300 border p-2 rounded-md focus:ring-2 focus:ring-blue-500 outline-none">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Valor da Consulta (R$)</label>
-                <input type="number" name="cost" step="0.01" value="0.00"
-                       class="w-full border-gray-300 border p-2 rounded-md focus:ring-2 focus:ring-blue-500 outline-none">
-            </div>
-        </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-medium text-secondary">Médico</label>
+                        <select name="doctor_id" required class="form-select">
+                            <option value="">Selecione o médico...</option>
+                            {% for d in doctors %}
+                            <option value="{{ d.id }}">Dr(a). {{ d.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
 
-        <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Notas / Motivo</label>
-            <textarea name="notes" rows="3" placeholder="Observações iniciais..."
-                      class="w-full border-gray-300 border p-2 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></textarea>
-        </div>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label fw-medium text-secondary">Data e Hora</label>
+                        <input type="datetime-local" name="date" required class="form-control">
+                    </div>
 
-        <div class="flex justify-end gap-3 pt-6 border-t">
-            <button type="button" hx-get="/appointments" hx-target="#main-content"
-                    class="px-6 py-2 border rounded-md text-gray-600 hover:bg-gray-50">Cancelar</button>
-            <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-bold transition">
-                Confirmar Agendamento
-            </button>
+                    <div class="col-md-6">
+                        <label class="form-label fw-medium text-secondary">Valor da Consulta (R$)</label>
+                        <input type="number" name="cost" step="0.01" value="0.00" class="form-control">
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-medium text-secondary">Notas / Motivo</label>
+                    <textarea name="notes" rows="3" placeholder="Observações iniciais..." class="form-control"></textarea>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2 border-top pt-4">
+                    <button type="button" 
+                            hx-get="/appointments/list" 
+                            hx-target="#main-content"
+                            hx-push-url="true"
+                            class="btn btn-outline-secondary px-4">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-primary px-4 fw-bold">
+                        Confirmar Agendamento
+                    </button>
+                </div>
+            </form>
         </div>
-    </form>
+    </div>
 </div>

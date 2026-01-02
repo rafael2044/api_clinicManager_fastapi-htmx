@@ -1,0 +1,96 @@
+<div class="col-auto col-md-3 col-xl-2 px-sm-2 px-0 bg-primary">
+   <div class="d-flex flex-column align-items-center align-items-sm-start px-3 pt-2 text-white min-vh-100">
+         <a href="/" class="d-flex align-items-center pb-3 mb-md-0 me-md-auto text-white text-decoration-none">
+            <span class="fs-4 fw-bold d-none d-sm-inline">ClinicManager</span>
+         </a>
+         <ul class="nav nav-pills flex-column mb-sm-auto mb-0 align-items-center align-items-sm-start text-decoration-none" id="menu">
+            {% if request.state.user %}
+               <li class="nav-item">
+                  <a class="nav-link align-middle text-white px-0"
+                  hx-get="/"
+                  hx-target="#main-content"
+                  hx-push-url="true"
+                  >
+                        <i class="fs-4 bi-house"></i> <span class="ms-1 d-none d-sm-inline">Pagina Inicial</span>
+                  </a>
+               </li>
+               {% if request.state.user.employee.role in ('doctor', 'admin') %}
+               <li>
+                  <a class="nav-link px-0 align-middle text-white"
+                  hx-get="/consultations"
+                  hx-target="#main-content"
+                  hx-push-url="true">
+                  <i class="bi bi-card-text fs-4"> </i><span class="ms-1 d-none d-sm-inline">Atendimentos</span></a>
+               </li>
+
+               <li>
+                  <a class="nav-link px-0 align-middle text-white"
+                  hx-get="/consultations/history"
+                  hx-target="#main-content"
+                  hx-push-url="true">
+                  <i class="bi bi-folder2-open fs-4"> </i><span class="ms-1 d-none d-sm-inline">Prontuários</span></a>
+               </li>
+               {% endif %}
+
+               <li>
+                  <a class="nav-link px-0 align-middle text-white"
+                  hx-get="/appointments"
+                  hx-target="#main-content"
+                  hx-push-url="true">
+                        <i class="bi bi-calendar-check fs-4"></i></i> <span class="ms-1 d-none d-sm-inline">Agendamentos</span>
+                     </a>
+               </li>
+               {% if request.state.user.employee.role in ('admin', 'receptionist') %}
+               <li>
+                  <a class="nav-link px-0 align-middle text-white"
+                  hx-get="/patients"
+                  hx-target="#main-content"
+                  hx-push-url="true">
+                     <i class="bi bi-people-fill fs-4"></i></i> <span class="ms-1 d-none d-sm-inline">Pacientes</span> </a>
+               </li>
+               {% endif %}
+               {% if request.state.user.employee.role == 'admin' %}
+               <li>
+                  <a class="nav-link px-0 align-middle text-white"
+                  hx-get="/employees"
+                  hx-target="#main-content"
+                  hx-push-url="true">
+                        <i class="bi bi-person-badge fs-4"></i> <span class="ms-1 d-none d-sm-inline">Funcionarios</span></a>
+               </li>
+
+               <li>
+                  <a class="nav-link px-0 align-middle text-white"
+                  hx-get="/users"
+                  hx-target="#main-content"
+                  hx-push-url="true">
+                  <i class="bi bi-person-circle fs-4"> </i><span class="ms-1 d-none d-sm-inline">Usuários</span></a>
+               </li>
+               {% endif %}
+            {% else %}
+               <li>
+                  <a class="nav-link px-0 align-middle text-white"
+                  hx-get="/auth/login"
+                  hx-target="#main-content"
+                  hx-push-url="true">
+                  <i class="bi bi-box-arrow-in-right fs-4"> </i><span class="ms-1 d-none d-sm-inline">Entrar no Sistema</span></a>
+               </li>
+            {% endif %}
+         </ul>
+         <hr>
+         <div class="dropdown pb-4">
+            <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
+               <span class="d-block mx-1">{{ request.state.user.username }}</span>
+               <span class="d-inline mx-1">({{ request.state.user.employee.role}})</span>
+            </a>
+            <ul class="dropdown-menu dropdown-menu-dark text-small shadow">
+               <li><a class="dropdown-item" href="#">New project...</a></li>
+               <li><a class="dropdown-item" href="#">Settings</a></li>
+               <li><a class="dropdown-item" href="#">Profile</a></li>
+               <li>
+                     <hr class="dropdown-divider">
+               </li>
+               <li><a class="dropdown-item" hx-get="/auth/logout">Sair</a></li>
+            </ul>
+         </div>
+   </div>
+</div>
